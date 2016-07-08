@@ -4,11 +4,13 @@ import (
 	"image"
 
 	"github.com/pankona/gomo-simra/simra"
+	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
 )
 
 // TitleScene represents a scene object for TitleScene
 type TitleScene struct {
+	Game       *domain.Game
 	background simra.Sprite
 }
 
@@ -18,7 +20,6 @@ type TitleScene struct {
 // screen size of this scene.
 func (t *TitleScene) Initialize() {
 	simra.LogDebug("[IN]")
-
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
 
 	// initialize sprites
@@ -67,5 +68,6 @@ func (t *TitleScene) OnTouchMove(x, y float32) {
 // It is caused by calling AddtouchListener for TitleScene.background sprite.
 func (t *TitleScene) OnTouchEnd(x, y float32) {
 	// scene end. go to next scene
-	simra.GetInstance().SetScene(&LevelScene{})
+	t.Game.StartGame()
+	simra.GetInstance().SetScene(&LevelScene{game: t.Game})
 }

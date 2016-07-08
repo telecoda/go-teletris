@@ -5,17 +5,22 @@ import (
 	"math"
 
 	"github.com/pankona/gomo-simra/simra"
+	"github.com/pankona/gomo-simra/simra/peer"
+	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
+	"golang.org/x/mobile/exp/sprite"
 )
 
 // LevelScene represents a scene object for LevelScene
 type LevelScene struct {
-	ball       simra.Sprite
-	background simra.Sprite
-	ctrlup     simra.Sprite
-	ctrldown   simra.Sprite
-	ctrlleft   simra.Sprite
-	ctrlright  simra.Sprite
+	game          *domain.Game
+	background    simra.Sprite
+	blockTextures map[domain.BlockColour]*sprite.SubTex
+	boardSprites  [][]*simra.Sprite
+	ctrlup        simra.Sprite
+	ctrldown      simra.Sprite
+	ctrlleft      simra.Sprite
+	ctrlright     simra.Sprite
 	// buttonState represents which ctrl is pressed (or no ctrl pressed)
 	buttonState int
 
@@ -28,6 +33,15 @@ const (
 	ctrlDown
 	ctrlLeft
 	ctrlRight
+)
+
+const (
+	ctrlMarginLeft      = 10
+	ctrlMarginBottom    = 10
+	ctrlMarginBetween   = 10
+	buttonMarginRight   = 20
+	buttonMarginBottom  = 20
+	buttonMarginBetween = 10
 )
 
 // Initialize initializes LevelScene scene
@@ -48,7 +62,6 @@ func (l *LevelScene) Initialize() {
 	// initialize sprites
 	l.initSprites()
 	l.buttonReplaced = false
-
 	simra.LogDebug("[OUT]")
 }
 
@@ -69,26 +82,12 @@ func (l *LevelScene) OnTouchEnd(x, y float32) {
 
 func (l *LevelScene) initSprites() {
 	l.initBackground()
+	l.initBlockTextures()
+	l.initBoardBlocks()
 	l.initctrlDown()
 	l.initctrlUp()
 	l.initctrlLeft()
 	l.initctrlRight()
-	l.initBall()
-
-}
-
-func (l *LevelScene) initBall() {
-	// set size of ball
-	l.ball.W = float32(48)
-	l.ball.H = float32(48)
-
-	// put center of screen at start
-	l.ball.X = config.ScreenWidth / 2
-	l.ball.Y = config.ScreenHeight / 2
-
-	simra.GetInstance().AddSprite("ball.png",
-		image.Rect(0, 0, int(l.ball.W), int(l.ball.H)),
-		&l.ball)
 }
 
 func (l *LevelScene) initBackground() {
@@ -106,14 +105,83 @@ func (l *LevelScene) initBackground() {
 
 }
 
-const (
-	ctrlMarginLeft      = 10
-	ctrlMarginBottom    = 10
-	ctrlMarginBetween   = 10
-	buttonMarginRight   = 20
-	buttonMarginBottom  = 20
-	buttonMarginBetween = 10
-)
+func (l *LevelScene) initBlockTextures() {
+
+	l.blockTextures = make(map[domain.BlockColour]*sprite.SubTex, 0)
+
+	rect := image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels)
+
+	for i, name := range domain.SpriteNames {
+		tex := peer.GetGLPeer().LoadTexture(name, rect)
+		l.blockTextures[i] = &tex
+	}
+}
+
+func (l *LevelScene) initBoardBlocks() {
+
+	blocks := *l.game.GetBlocks()
+	boardWidth := len(blocks)
+	l.boardSprites = make([][]*simra.Sprite, boardWidth)
+
+	for x := 0; x < boardWidth; x++ {
+		boardHeight := len(blocks[x])
+		l.boardSprites[x] = make([]*simra.Sprite, boardHeight)
+		for y := 0; y < boardHeight; y++ {
+
+			// add background sprite
+			block := blocks[x][y]
+			blockSprite := new(simra.Sprite)
+			blockSprite.W = float32(domain.BlockPixels)
+			blockSprite.H = float32(domain.BlockPixels)
+
+			// put center of screen
+			blockSprite.X = float32(domain.BlockPixels*x + domain.BlockPixels/2)
+			blockSprite.Y = float32(domain.BlockPixels*y + domain.BlockPixels/2)
+
+			// lookup block sprite
+			blockImage := domain.SpriteNames[block.Colour]
+
+			simra.GetInstance().AddSprite(blockImage,
+				image.Rect(0, 0, int(domain.BlockPixels), int(domain.BlockPixels)),
+				blockSprite)
+			l.boardSprites[x][y] = blockSprite
+
+		}
+	}
+}
+
+func (l *LevelScene) updateBoardBlocks() {
+
+	game := *l.game
+	blocks := *game.GetBlocks()
+	boardWidth := len(blocks)
+
+	// update sprite textures based on block colours
+	// changed from LoadTexture() to ReplaceTexture() so we don't reload
+	// textures from file 60 times a second...
+	for x := 0; x < boardWidth; x++ {
+		boardHeight := len(blocks[x])
+		for y := 0; y < boardHeight; y++ {
+
+			boardSprite := l.boardSprites[x][y]
+			block := blocks[x][y]
+			tex := l.blockTextures[block.Colour]
+			peer.GetSpriteContainer().ReplaceTexture(&boardSprite.Sprite, *tex)
+
+		}
+	}
+
+	// overlay players blocks onto board
+	player := game.Player
+	playerBlocks := player.GetShapeBlocks()
+	for _, playerBlock := range playerBlocks {
+		blockX := playerBlock.X + player.X
+		blockY := playerBlock.Y + player.Y
+		boardSprite := l.boardSprites[blockX][blockY]
+		tex := l.blockTextures[playerBlock.Colour]
+		peer.GetSpriteContainer().ReplaceTexture(&boardSprite.Sprite, *tex)
+	}
+}
 
 // ctrlUp
 type ctrlUpTouchListener struct {
@@ -327,160 +395,27 @@ func (l *LevelScene) initctrlRight() {
 		&l.ctrlright)
 
 	// add touch listener for sprite
-	ctrlright := &ctrlLeftTouchListener{}
+	ctrlright := &ctrlRightTouchListener{}
 	l.ctrlright.AddTouchListener(ctrlright)
 	ctrlright.parent = l
 }
-
-// func (LevelScene *LevelScene) replaceButtonColor() {
-// 	simra.LogDebug("IN")
-// 	// red changes to blue
-// 	LevelScene.buttonRed.ReplaceTexture("blue_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonBlue.W), int(LevelScene.buttonBlue.H)))
-// 	// blue changes to red
-// 	LevelScene.buttonBlue.ReplaceTexture("red_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonRed.W), int(LevelScene.buttonRed.H)))
-
-// 	LevelScene.buttonReplaced = true
-// 	simra.LogDebug("OUT")
-// }
-
-// func (LevelScene *LevelScene) originalButtonColor() {
-// 	simra.LogDebug("IN")
-// 	// set red button to buttonRed
-// 	LevelScene.buttonRed.ReplaceTexture("red_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonBlue.W), int(LevelScene.buttonBlue.H)))
-// 	// set blue button to buttonBlue
-// 	LevelScene.buttonBlue.ReplaceTexture("blue_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonRed.W), int(LevelScene.buttonRed.H)))
-
-// 	LevelScene.buttonReplaced = false
-// 	simra.LogDebug("OUT")
-// }
-
-// // ButtonBlueTouchListener represents a listener object
-// // to notify touch event of Blue Button
-// type ButtonBlueTouchListener struct {
-// 	parent *LevelScene
-// }
-
-// // OnTouchBegin is called when Blue Button is Touched.
-// func (LevelScene *ButtonBlueTouchListener) OnTouchBegin(x, y float32) {
-// 	simra.LogDebug("IN")
-// 	if LevelScene.parent.buttonReplaced {
-// 		LevelScene.parent.originalButtonColor()
-// 	} else {
-// 		LevelScene.parent.replaceButtonColor()
-// 	}
-
-// 	simra.GetInstance().RemoveSprite(&LevelScene.parent.ball)
-// 	simra.LogDebug("OUT")
-// }
-
-// // OnTouchMove is called when Blue Button is Touched and moved.
-// func (LevelScene *ButtonBlueTouchListener) OnTouchMove(x, y float32) {
-// 	// nop
-// }
-
-// // OnTouchEnd is called when Blue Button is Touched and it is released.
-// func (LevelScene *ButtonBlueTouchListener) OnTouchEnd(x, y float32) {
-// 	// nop
-// }
-
-// func (LevelScene *LevelScene) initButtonBlue() {
-// 	simra.LogDebug("IN")
-// 	// set size of button blue
-// 	LevelScene.buttonBlue.W = float32(80)
-// 	LevelScene.buttonBlue.H = float32(80)
-
-// 	// put button red on right bottom
-// 	LevelScene.buttonBlue.X = config.ScreenWidth - buttonMarginRight - LevelScene.buttonBlue.W/2
-// 	LevelScene.buttonBlue.Y = buttonMarginBottom + (80) + buttonMarginBetween + LevelScene.buttonBlue.W/2
-
-// 	// add sprite to glpeer
-// 	simra.GetInstance().AddSprite("blue_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonBlue.W), int(LevelScene.buttonBlue.H)),
-// 		&LevelScene.buttonBlue)
-
-// 	// add touch listener for sprite
-// 	listener := &ButtonBlueTouchListener{}
-// 	LevelScene.buttonBlue.AddTouchListener(listener)
-// 	listener.parent = LevelScene
-// 	simra.LogDebug("OUT")
-// }
-
-// // ButtonRedTouchListener represents a listener object
-// // to notify touch event of Red Button
-// type ButtonRedTouchListener struct {
-// 	parent *LevelScene
-// }
-
-// // OnTouchBegin is called when Red Button is Touched.
-// func (LevelScene *ButtonRedTouchListener) OnTouchBegin(x, y float32) {
-// 	simra.LogDebug("IN")
-// 	if LevelScene.parent.buttonReplaced {
-// 		LevelScene.parent.originalButtonColor()
-// 	} else {
-// 		LevelScene.parent.replaceButtonColor()
-// 	}
-// 	simra.GetInstance().AddSprite("ball.png",
-// 		image.Rect(0, 0, int(LevelScene.parent.ball.W), int(LevelScene.parent.ball.H)),
-// 		&LevelScene.parent.ball)
-// 	simra.LogDebug("OUT")
-// }
-
-// // OnTouchMove is called when Red Button is Touched and moved.
-// func (LevelScene *ButtonRedTouchListener) OnTouchMove(x, y float32) {
-// 	// nop
-// }
-
-// // OnTouchEnd is called when Red Button is Touched and it is released.
-// func (LevelScene *ButtonRedTouchListener) OnTouchEnd(x, y float32) {
-// 	// nop
-// }
-
-// func (LevelScene *LevelScene) initButtonRed() {
-// 	// set size of button red
-// 	LevelScene.buttonRed.W = float32(80)
-// 	LevelScene.buttonRed.H = float32(80)
-
-// 	// put button red on right bottom
-// 	LevelScene.buttonRed.X = config.ScreenWidth - buttonMarginRight - LevelScene.buttonBlue.W -
-// 		buttonMarginBetween - LevelScene.buttonRed.W/2
-// 	LevelScene.buttonRed.Y = buttonMarginBottom + (LevelScene.buttonRed.H / 2)
-
-// 	// add sprite to glpeer
-// 	simra.GetInstance().AddSprite("red_circle.png",
-// 		image.Rect(0, 0, int(LevelScene.buttonRed.W), int(LevelScene.buttonRed.H)),
-// 		&LevelScene.buttonRed)
-
-// 	// add touch listener for sprite
-// 	listener := &ButtonRedTouchListener{}
-// 	LevelScene.buttonRed.AddTouchListener(listener)
-// 	listener.parent = LevelScene
-// }
-
-var degree float32
 
 // Drive is called from simra.
 // This is used to update sprites position.
 // This will be called 60 times per sec.
 func (l *LevelScene) Drive() {
-	degree++
-	if degree >= 360 {
-		degree = 0
-	}
+
+	l.updateBoardBlocks()
 
 	switch l.buttonState {
 	case ctrlUp:
-		l.ball.Y++
+		l.game.Rotate()
 	case ctrlDown:
-		l.ball.Y--
+		l.game.MoveDown()
 	case ctrlLeft:
-		l.ball.X--
+		l.game.MoveLeft()
 	case ctrlRight:
-		l.ball.X++
+		l.game.MoveRight()
 	}
 
-	l.ball.R = float32(degree) * math.Pi / 180
 }

@@ -8,6 +8,21 @@ import (
 	"github.com/telecoda/go-teletris/scene"
 )
 
+var game *domain.Game
+
+func main() {
+	simra.LogDebug("[IN]")
+	engine := simra.GetInstance()
+
+	game = domain.NewGame()
+
+	onStart := make(chan bool)
+	onStop := make(chan bool)
+	go eventHandle(onStart, onStop)
+	engine.Start(onStart, onStop)
+	simra.LogDebug("[OUT]")
+}
+
 func eventHandle(onStart, onStop chan bool) {
 	for {
 		select {
@@ -17,25 +32,9 @@ func eventHandle(onStart, onStop chan bool) {
 			// TODO: this will be called on rotation.
 			// to keep state on rotation, SetScene must not call
 			// every onStart.
-			engine.SetScene(&scene.TitleScene{})
+			engine.SetScene(&scene.TitleScene{Game: game})
 		case <-onStop:
 			simra.LogDebug("receive chan. onStop")
 		}
 	}
-}
-
-var game domain.Game
-
-func main() {
-	simra.LogDebug("[IN]")
-	engine := simra.GetInstance()
-
-	game := domain.NewGame()
-	game.StartGame()
-
-	onStart := make(chan bool)
-	onStop := make(chan bool)
-	go eventHandle(onStart, onStop)
-	engine.Start(onStart, onStop)
-	simra.LogDebug("[OUT]")
 }
