@@ -1,5 +1,12 @@
 package domain
 
+import (
+	"log"
+
+	"golang.org/x/mobile/asset"
+	"golang.org/x/mobile/exp/audio"
+)
+
 type AudioManager struct {
 }
 
@@ -7,9 +14,10 @@ type HighScores struct {
 }
 
 type Game struct {
-	state  GameState
-	board  Board
-	Player Player
+	state       GameState
+	board       Board
+	Player      Player
+	audioPlayer *audio.Player
 }
 
 type Teletris struct {
@@ -20,9 +28,23 @@ type Teletris struct {
 
 func NewGame() *Game {
 	g := new(Game)
+
 	g.board = NewBoard()
+	g.initAudio()
 	g.state = Menu
 	return g
+}
+
+func (g *Game) initAudio() {
+	rc, err := asset.Open("game_music.wav")
+	if err != nil {
+		log.Fatal(err)
+	}
+	g.audioPlayer, err = audio.NewPlayer(rc, 0, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func (g *Game) StartGame() {
@@ -30,6 +52,8 @@ func (g *Game) StartGame() {
 	// init player state
 	g.Player.Init()
 	g.board.reset()
+	g.audioPlayer.Seek(0)
+	g.audioPlayer.Play()
 
 	g.state = Playing
 	g.Player.setNextRandomShape()
@@ -48,8 +72,9 @@ func (g *Game) ResumeGame() {
 }
 
 func (g *Game) GameOver() {
-	// TODO
+	log.Println("Game Over!")
 	g.state = GameOver
+	g.audioPlayer.Stop()
 
 	// TODO update high scores
 }
@@ -72,7 +97,7 @@ func (g *Game) GetBlocks() *[][]Block {
 
 func (g *Game) newShape() {
 	g.Player.setNextRandomShape()
-	if g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
+	if !g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
 		g.GameOver()
 	}
 }
