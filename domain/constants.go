@@ -8,7 +8,7 @@ var (
 	BoardHeight  = 22
 	BoardOffsetX = 32
 	BoardOffsetY = 32
-	BlockPixels  = 32
+	BlockPixels  = 40
 )
 
 var ArrowPixels = 64

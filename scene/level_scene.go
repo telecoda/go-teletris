@@ -37,7 +37,7 @@ const (
 
 const (
 	ctrlMarginLeft      = 10
-	ctrlMarginBottom    = 10
+	ctrlMarginBottom    = 100
 	ctrlMarginBetween   = 10
 	buttonMarginRight   = 20
 	buttonMarginBottom  = 20
@@ -135,8 +135,8 @@ func (l *LevelScene) initBoardBlocks() {
 			blockSprite.H = float32(domain.BlockPixels)
 
 			// put center of screen
-			blockSprite.X = float32(domain.BlockPixels*x + domain.BlockPixels/2)
-			blockSprite.Y = float32(domain.BlockPixels*y + domain.BlockPixels/2)
+			blockSprite.X = float32(domain.BlockPixels*x + domain.BlockPixels/2 + domain.BoardOffsetX)
+			blockSprite.Y = float32(domain.BlockPixels*y + domain.BlockPixels/2 + domain.BoardOffsetY)
 
 			// lookup block sprite
 			blockImage := domain.SpriteNames[block.Colour]
