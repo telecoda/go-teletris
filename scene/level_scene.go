@@ -417,5 +417,7 @@ func (l *LevelScene) Drive() {
 	case ctrlRight:
 		l.game.MoveRight()
 	}
+	// stop button repeats
+	l.buttonState = ctrlNop
 
 }

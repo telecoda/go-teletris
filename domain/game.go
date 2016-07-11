@@ -2,6 +2,7 @@ package domain
 
 import (
 	"log"
+	"time"
 
 	"golang.org/x/mobile/asset"
 	"golang.org/x/mobile/exp/audio"
@@ -58,9 +59,9 @@ func (g *Game) StartGame() {
 	g.state = Playing
 	g.Player.setNextRandomShape()
 	g.Player.setNextRandomShape()
-	//TODO start music
 
-	// TODO start block down timer
+	go g.run()
+
 }
 
 func (g *Game) PauseGame() {
@@ -80,6 +81,16 @@ func (g *Game) GameOver() {
 }
 
 func (g *Game) run() {
+
+	for g.state == Playing {
+		// drop blocks exery x milliseconds
+
+		// calc delay speed
+		delaySpeed := BlockStartSpeed - (g.Player.level - 1*LevelSpeedIncrease)
+
+		time.Sleep(time.Duration(delaySpeed) * time.Millisecond)
+		g.MoveDown()
+	}
 
 }
 
