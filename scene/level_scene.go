@@ -13,7 +13,7 @@ import (
 
 // LevelScene represents a scene object for LevelScene
 type LevelScene struct {
-	game          *domain.Game
+	Game          *domain.Game
 	background    simra.Sprite
 	blockTextures map[domain.BlockColour]*sprite.SubTex
 	boardSprites  [][]*simra.Sprite
@@ -119,7 +119,7 @@ func (l *LevelScene) initBlockTextures() {
 
 func (l *LevelScene) initBoardBlocks() {
 
-	blocks := *l.game.GetBlocks()
+	blocks := *l.Game.GetBlocks()
 	boardWidth := len(blocks)
 	l.boardSprites = make([][]*simra.Sprite, boardWidth)
 
@@ -153,7 +153,7 @@ func (l *LevelScene) initBoardBlocks() {
 
 func (l *LevelScene) updateBoardBlocks() {
 
-	game := *l.game
+	game := *l.Game
 	blocks := *game.GetBlocks()
 	boardWidth := len(blocks)
 
@@ -411,15 +411,17 @@ func (l *LevelScene) Drive() {
 
 	switch l.buttonState {
 	case ctrlUp:
-		l.game.Rotate()
+		l.Game.Rotate()
 	case ctrlDown:
-		l.game.MoveDown()
+		l.Game.MoveDown()
 	case ctrlLeft:
-		l.game.MoveLeft()
+		l.Game.MoveLeft()
 	case ctrlRight:
-		l.game.MoveRight()
+		l.Game.MoveRight()
 	}
 	// stop button repeats
 	//l.buttonState = ctrlNop
-
+	if l.Game.GetState() == domain.GameOver {
+		simra.GetInstance().SetScene(&GameOverScene{Game: l.Game})
+	}
 }

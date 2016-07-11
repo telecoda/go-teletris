@@ -43,7 +43,7 @@ func (t *TitleScene) initBackground() {
 	t.background.X = config.ScreenWidth / 2
 	t.background.Y = config.ScreenHeight / 2
 
-	simra.GetInstance().AddSprite("space_title.png",
+	simra.GetInstance().AddSprite("title.png",
 		image.Rect(0, 0, int(t.background.W), int(t.background.H)),
 		&t.background)
 }
@@ -69,5 +69,5 @@ func (t *TitleScene) OnTouchMove(x, y float32) {
 func (t *TitleScene) OnTouchEnd(x, y float32) {
 	// scene end. go to next scene
 	t.Game.StartGame()
-	simra.GetInstance().SetScene(&LevelScene{game: t.Game})
+	simra.GetInstance().SetScene(&LevelScene{Game: t.Game})
 }

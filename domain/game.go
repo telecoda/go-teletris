@@ -29,9 +29,6 @@ type Teletris struct {
 
 func NewGame() *Game {
 	g := new(Game)
-
-	g.board = NewBoard()
-	g.initAudio()
 	g.state = Menu
 	return g
 }
@@ -50,6 +47,8 @@ func (g *Game) initAudio() {
 
 func (g *Game) StartGame() {
 	// Start a new game
+	g.board = NewBoard()
+	g.initAudio()
 	// init player state
 	g.Player.Init()
 	g.board.reset()
@@ -112,6 +111,10 @@ func (g *Game) newShape() {
 	if !g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
 		g.GameOver()
 	}
+}
+
+func (g *Game) GetState() GameState {
+	return g.state
 }
 
 func (g *Game) Rotate() {

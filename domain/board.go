@@ -75,6 +75,9 @@ func (b *Board) addShapeToBoard(player *Player) {
 		Shape has collided so add to the permanent board
 	*/
 
+	if player == nil {
+		return
+	}
 	blocks := player.shape.GetBlocks()
 	if blocks == nil {
 		return
