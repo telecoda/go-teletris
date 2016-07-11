@@ -144,6 +144,7 @@ func (l *LevelScene) initBoardBlocks() {
 			simra.GetInstance().AddSprite(blockImage,
 				image.Rect(0, 0, int(domain.BlockPixels), int(domain.BlockPixels)),
 				blockSprite)
+
 			l.boardSprites[x][y] = blockSprite
 
 		}
@@ -164,6 +165,7 @@ func (l *LevelScene) updateBoardBlocks() {
 		for y := 0; y < boardHeight; y++ {
 
 			boardSprite := l.boardSprites[x][y]
+
 			block := blocks[x][y]
 			tex := l.blockTextures[block.Colour]
 			peer.GetSpriteContainer().ReplaceTexture(&boardSprite.Sprite, *tex)
@@ -418,6 +420,6 @@ func (l *LevelScene) Drive() {
 		l.game.MoveRight()
 	}
 	// stop button repeats
-	l.buttonState = ctrlNop
+	//l.buttonState = ctrlNop
 
 }

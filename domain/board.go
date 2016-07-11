@@ -146,7 +146,7 @@ func (b *Board) moveRowDown(lastRow int) {
 
 	boardWidth := len(b.cells)
 	boardHeight := len(b.cells[0])
-	firstRow := boardHeight - 1
+	firstRow := boardHeight - 2
 
 	for y := lastRow; y < firstRow; y++ {
 		for x := 1; x < boardWidth-1; x++ {

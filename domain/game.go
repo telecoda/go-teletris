@@ -37,11 +37,11 @@ func NewGame() *Game {
 }
 
 func (g *Game) initAudio() {
-	rc, err := asset.Open("game_music.wav")
+	rc, err := asset.Open("game_music_16.wav")
 	if err != nil {
 		log.Fatal(err)
 	}
-	g.audioPlayer, err = audio.NewPlayer(rc, 0, 0)
+	g.audioPlayer, err = audio.NewPlayer(rc, audio.Mono16, 16000)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,6 +54,7 @@ func (g *Game) StartGame() {
 	g.Player.Init()
 	g.board.reset()
 	g.audioPlayer.Seek(0)
+	g.audioPlayer.SetVolume(1.0)
 	g.audioPlayer.Play()
 
 	g.state = Playing
