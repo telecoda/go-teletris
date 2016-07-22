@@ -1,13 +1,18 @@
 package scene
 
 import (
+	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
+	"log"
 	"math"
 
-	"github.com/pankona/gomo-simra/simra"
-	"github.com/pankona/gomo-simra/simra/peer"
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
+	"github.com/telecoda/go-teletris/scene/io"
+	"github.com/telecoda/gomo-simra/simra"
+	"github.com/telecoda/gomo-simra/simra/peer"
 	"golang.org/x/mobile/exp/sprite"
 )
 
@@ -15,6 +20,7 @@ import (
 type LevelScene struct {
 	Game          *domain.Game
 	background    simra.Sprite
+	blockImages   map[domain.BlockColour]*image.RGBA
 	blockTextures map[domain.BlockColour]*sprite.SubTex
 	boardSprites  [][]*simra.Sprite
 	ctrlup        simra.Sprite
@@ -22,9 +28,11 @@ type LevelScene struct {
 	ctrlleft      simra.Sprite
 	ctrlright     simra.Sprite
 	// buttonState represents which ctrl is pressed (or no ctrl pressed)
-	buttonState int
-
+	buttonState    int
 	buttonReplaced bool
+
+	// images
+	backgroundImage image.Image
 }
 
 const (
@@ -83,6 +91,7 @@ func (l *LevelScene) OnTouchEnd(x, y float32) {
 func (l *LevelScene) initSprites() {
 	l.initBackground()
 	l.initBlockTextures()
+	l.initBackgroundTexture()
 	l.initBoardBlocks()
 	l.initctrlDown()
 	l.initctrlUp()
@@ -108,13 +117,108 @@ func (l *LevelScene) initBackground() {
 func (l *LevelScene) initBlockTextures() {
 
 	l.blockTextures = make(map[domain.BlockColour]*sprite.SubTex, 0)
-
+	l.blockImages = make(map[domain.BlockColour]*image.RGBA, 0)
 	rect := image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels)
 
 	for i, name := range domain.SpriteNames {
-		tex := peer.GetGLPeer().LoadTexture(name, rect)
-		l.blockTextures[i] = &tex
+
+		blockImage, _, err := io.LoadImage("assets/" + name)
+		if err != nil {
+			panic(fmt.Sprintf("Error loading image: %s\n", err))
+		} else {
+
+			// Save texture for using with Sprites
+			tex := peer.GetGLPeer().LoadTextureFromImage(blockImage, rect)
+			l.blockTextures[i] = &tex
+			// Create and save imageRGBA for offscreen rendering
+			bounds := blockImage.Bounds()
+			blockRGBA := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+			draw.Draw(blockRGBA, blockRGBA.Bounds(), blockImage, bounds.Min, draw.Src)
+			l.blockImages[i] = blockRGBA
+		}
 	}
+}
+
+func (l *LevelScene) initBackgroundTexture() {
+
+	// load image from file
+	sourceImage, _, err := io.LoadImage("assets/space_background.png")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading image: %s\n", err))
+	} else {
+		gridImage := DrawGrid(sourceImage, 20, 20)
+		// draw grey blocks on background
+		borderImage := l.drawBorderBlocks(gridImage)
+		rect := image.Rect(0, 0, borderImage.Bounds().Dx(), borderImage.Bounds().Dy())
+		tex := peer.GetGLPeer().LoadTextureFromImage(borderImage, rect)
+
+		// update background image
+		peer.GetSpriteContainer().ReplaceTexture(&l.background.Sprite, tex)
+
+	}
+}
+
+func (l *LevelScene) drawBorderBlocks(sourceImage image.Image) image.Image {
+
+	blocks := *l.Game.GetBlocks()
+	boardWidth := len(blocks)
+
+	greyBlock := l.blockImages[domain.Grey]
+	bounds := sourceImage.Bounds()
+	borderImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(borderImage, bounds, sourceImage, bounds.Min, draw.Src)
+
+	for x := 0; x < boardWidth; x++ {
+		boardHeight := len(blocks[x])
+		for y := 0; y < boardHeight; y++ {
+
+			block := blocks[x][y]
+			point := image.Point{X: 0, Y: 0}
+			// This is a border block so render is on background image
+			if block.Colour == domain.Grey {
+				log.Printf("Grey block x: %d y: %d\n", x, y)
+				xCoord := (x * domain.BlockPixels) + domain.BoardOffsetX
+				yCoord := (y * domain.BlockPixels) + domain.BoardOffsetY
+				rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
+				draw.Draw(borderImage, rect, greyBlock, point, draw.Src)
+			}
+		}
+	}
+
+	return borderImage
+}
+
+func DrawGrid(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
+
+	log.Println("Drawing grid over image.")
+
+	lineWidth := 1
+	// convert sourceImage to RGBA image
+	bounds := sourceImage.Bounds()
+	gridImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(gridImage, gridImage.Bounds(), sourceImage, bounds.Min, draw.Src)
+
+	lineColour := color.RGBA{0, 0, 0, 255}
+
+	// draw horizontal lines
+	for y := 0; y < bounds.Dy(); y += tileHeight {
+
+		lineBounds := image.Rect(0, y, bounds.Dx(), y+lineWidth)
+		//lineBounds := &image.Rectangle{Min: {X: 0, Y: 0}, Max: {X: 160, Y: 5}}
+		draw.Draw(gridImage, lineBounds, &image.Uniform{lineColour}, image.ZP, draw.Src)
+
+	}
+
+	// draw vertical lines
+	for x := 0; x < bounds.Dx(); x += tileWidth {
+
+		lineBounds := image.Rect(x, 0, x+lineWidth, bounds.Dy())
+		//lineBounds := &image.Rectangle{Min: {X: 0, Y: 0}, Max: {X: 160, Y: 5}}
+		draw.Draw(gridImage, lineBounds, &image.Uniform{lineColour}, image.ZP, draw.Src)
+
+	}
+
+	return gridImage
 }
 
 func (l *LevelScene) initBoardBlocks() {
@@ -130,6 +234,11 @@ func (l *LevelScene) initBoardBlocks() {
 
 			// add background sprite
 			block := blocks[x][y]
+
+			// skip border blocks
+			if block.Colour == domain.Grey {
+				continue
+			}
 			blockSprite := new(simra.Sprite)
 			blockSprite.W = float32(domain.BlockPixels)
 			blockSprite.H = float32(domain.BlockPixels)
@@ -163,10 +272,13 @@ func (l *LevelScene) updateBoardBlocks() {
 	for x := 0; x < boardWidth; x++ {
 		boardHeight := len(blocks[x])
 		for y := 0; y < boardHeight; y++ {
-
+			block := blocks[x][y]
+			// skip border blocks
+			if block.Colour == domain.Grey {
+				continue
+			}
 			boardSprite := l.boardSprites[x][y]
 
-			block := blocks[x][y]
 			tex := l.blockTextures[block.Colour]
 			peer.GetSpriteContainer().ReplaceTexture(&boardSprite.Sprite, *tex)
 

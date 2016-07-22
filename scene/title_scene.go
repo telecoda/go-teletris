@@ -3,9 +3,9 @@ package scene
 import (
 	"image"
 
-	"github.com/pankona/gomo-simra/simra"
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
+	"github.com/telecoda/gomo-simra/simra"
 )
 
 // TitleScene represents a scene object for TitleScene

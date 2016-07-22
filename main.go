@@ -3,9 +3,9 @@
 package main
 
 import (
-	"github.com/pankona/gomo-simra/simra"
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene"
+	"github.com/telecoda/gomo-simra/simra"
 )
 
 var game *domain.Game
