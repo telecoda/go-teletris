@@ -6,18 +6,19 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
-	"os"
+
+	"golang.org/x/mobile/asset"
 )
 
-func LoadImage(imagePath string) (image.Image, string, error) {
+func LoadImage(assetName string) (image.Image, string, error) {
 
-	file, err := os.Open(imagePath)
+	a, err := asset.Open(assetName)
 	if err != nil {
 		log.Printf("Error during LoadImage: %s", err)
 		return nil, "", err
 	}
-	defer file.Close()
-	loadedImage, format, err := image.Decode(file)
+	defer a.Close()
+	loadedImage, format, err := image.Decode(a)
 
 	return loadedImage, format, err
 
