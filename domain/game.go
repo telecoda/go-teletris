@@ -19,6 +19,7 @@ type Game struct {
 	board       Board
 	Player      Player
 	audioPlayer *audio.Player
+	dirty       bool
 }
 
 type Teletris struct {
@@ -62,6 +63,18 @@ func (g *Game) StartGame() {
 
 	go g.run()
 
+}
+
+func (g *Game) SetBoardDirty() {
+	g.dirty = true
+}
+
+func (g *Game) IsBoardDirty() bool {
+	return g.dirty
+}
+
+func (g *Game) CleanBoard() {
+	g.dirty = false
 }
 
 func (g *Game) PauseGame() {
@@ -136,6 +149,7 @@ func (g *Game) MoveDown() {
 		g.board.addShapeToBoard(&g.Player)
 		g.newShape()
 		g.board.checkCompleteRows()
+		g.SetBoardDirty()
 	}
 }
 

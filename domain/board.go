@@ -1,5 +1,7 @@
 package domain
 
+import "fmt"
+
 type Block struct {
 	X, Y   int
 	Colour BlockColour
@@ -83,13 +85,14 @@ func (b *Board) addShapeToBoard(player *Player) {
 		return
 	}
 
+	fmt.Printf("TEMP: addedShape, colour: %d\n", blocks[0].Colour)
+
 	for _, copiedBlock := range blocks {
 		blockX := player.X + copiedBlock.X
 		blockY := player.Y + copiedBlock.Y
 		copiedBlock.X = blockX
 		copiedBlock.Y = blockY
 		b.cells[blockX][blockY] = copiedBlock
-
 	}
 }
 
