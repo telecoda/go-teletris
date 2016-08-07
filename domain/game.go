@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -66,6 +67,7 @@ func (g *Game) StartGame() {
 }
 
 func (g *Game) SetBoardDirty() {
+	fmt.Println("TEMP: board is dirty\n")
 	g.dirty = true
 }
 
@@ -74,6 +76,7 @@ func (g *Game) IsBoardDirty() bool {
 }
 
 func (g *Game) CleanBoard() {
+	fmt.Println("TEMP: board is cleaned\n")
 	g.dirty = false
 }
 
@@ -130,7 +133,7 @@ func (g *Game) GetState() GameState {
 	return g.state
 }
 
-func (g *Game) Rotate() {
+func (g *Game) Rotate() bool {
 	// rotate shape
 	g.Player.Rotate()
 
@@ -138,31 +141,39 @@ func (g *Game) Rotate() {
 	if !g.board.canPlayerFitAt(&g.Player, g.Player.X, g.Player.Y) {
 		// rotate it back
 		g.Player.RotateBack()
+		return false
 	}
+	return true
 }
 
-func (g *Game) MoveDown() {
+func (g *Game) MoveDown() bool {
 	// test if player's block fits
 	if g.board.canPlayerFitAt(&g.Player, g.Player.X, g.Player.Y-1) {
 		g.Player.MoveDown()
+		return true
 	} else {
 		g.board.addShapeToBoard(&g.Player)
 		g.newShape()
 		g.board.checkCompleteRows()
 		g.SetBoardDirty()
+		return false
 	}
 }
 
-func (g *Game) MoveLeft() {
+func (g *Game) MoveLeft() bool {
 	// test if player's block fits
 	if g.board.canPlayerFitAt(&g.Player, g.Player.X-1, g.Player.Y) {
 		g.Player.MoveLeft()
+		return true
 	}
+	return false
 }
 
-func (g *Game) MoveRight() {
+func (g *Game) MoveRight() bool {
 	// test if player's block fits
 	if g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
 		g.Player.MoveRight()
+		return true
 	}
+	return false
 }

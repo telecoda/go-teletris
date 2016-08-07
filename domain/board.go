@@ -85,8 +85,6 @@ func (b *Board) addShapeToBoard(player *Player) {
 		return
 	}
 
-	fmt.Printf("TEMP: addedShape, colour: %d\n", blocks[0].Colour)
-
 	for _, copiedBlock := range blocks {
 		blockX := player.X + copiedBlock.X
 		blockY := player.Y + copiedBlock.Y
@@ -143,6 +141,7 @@ func (b *Board) destroyRows(rows map[int]bool) {
 			//this is a row to destroy
 			//move all rows above it down 1 row
 			//self.move_row_down(y
+			fmt.Println("TEMP: destroying line")
 			b.moveRowDown(y)
 		}
 	}
