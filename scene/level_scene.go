@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"image/draw"
 	"log"
-	"math"
 
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
@@ -35,22 +34,22 @@ type LevelScene struct {
 	backgroundImage image.Image
 }
 
-const (
-	ctrlNop = iota
-	ctrlUp
-	ctrlDown
-	ctrlLeft
-	ctrlRight
-)
+// const (
+// 	ctrlNop = iota
+// 	ctrlUp
+// 	ctrlDown
+// 	ctrlLeft
+// 	ctrlRight
+// )
 
-const (
-	ctrlMarginLeft      = 10
-	ctrlMarginBottom    = 100
-	ctrlMarginBetween   = 10
-	buttonMarginRight   = 20
-	buttonMarginBottom  = 20
-	buttonMarginBetween = 10
-)
+// const (
+// 	ctrlMarginLeft      = 10
+// 	ctrlMarginBottom    = 100
+// 	ctrlMarginBetween   = 10
+// 	buttonMarginRight   = 20
+// 	buttonMarginBottom  = 20
+// 	buttonMarginBetween = 10
+// )
 
 // Initialize initializes LevelScene scene
 // This is called from simra.
@@ -62,7 +61,7 @@ func (l *LevelScene) Initialize() {
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
 
 	// add global touch listener to catch touch end event
-	simra.GetInstance().AddTouchListener(l)
+	//simra.GetInstance().AddTouchListener(l)
 
 	// TODO: when goes to next scene, remove global touch listener
 	// simra.GetInstance().RemoveTouchListener(LevelScene)
@@ -73,29 +72,10 @@ func (l *LevelScene) Initialize() {
 	simra.LogDebug("[OUT]")
 }
 
-// OnTouchBegin is called when LevelScene scene is Touched.
-func (l *LevelScene) OnTouchBegin(x, y float32) {
-	// nop
-}
-
-// OnTouchMove is called when LevelScene scene is Touched and moved.
-func (l *LevelScene) OnTouchMove(x, y float32) {
-	// nop
-}
-
-// OnTouchEnd is called when LevelScene scene is Touched and it is released.
-func (l *LevelScene) OnTouchEnd(x, y float32) {
-	l.buttonState = ctrlNop
-}
-
 func (l *LevelScene) initSprites() {
 	l.initBackground()
 	l.initBlockTextures()
 	l.initBackgroundImage()
-	l.initctrlDown()
-	l.initctrlUp()
-	l.initctrlLeft()
-	l.initctrlRight()
 }
 
 func (l *LevelScene) initBackground() {
@@ -110,6 +90,11 @@ func (l *LevelScene) initBackground() {
 	simra.GetInstance().AddSprite("space_background.png",
 		image.Rect(0, 0, int(l.background.W), int(l.background.H)),
 		&l.background)
+
+	// add left touch listener for background
+	touchListener := &touchListener{}
+	touchListener.parent = l
+	l.background.AddTouchListener(touchListener)
 
 }
 
@@ -266,7 +251,6 @@ func (l *LevelScene) initPlayerSprites() {
 	player := game.Player
 	playerBlocks := player.GetShapeBlocks()
 	l.playerSprites = make([]*simra.Sprite, len(playerBlocks))
-	fmt.Printf("TEMP: added player sprites, colour: %d\n", playerBlocks[0].Colour)
 	for i, playerBlock := range playerBlocks {
 		playerSprite := new(simra.Sprite)
 
@@ -321,221 +305,76 @@ func (l *LevelScene) updatePlayerSprites() {
 
 }
 
-// ctrlUp
-type ctrlUpTouchListener struct {
-	parent *LevelScene
+// touchListener
+type touchListener struct {
+	parent                       *LevelScene
+	touching                     bool
+	touchBeginX, touchBeginY     float32
+	touchCurrentX, touchCurrentY float32
+	touchEndX, touchEndY         float32
 }
 
-func (l *ctrlUpTouchListener) OnTouchBegin(x, y float32) {
-	simra.LogDebug("[IN] ctrlUp Begin!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlUp
-
-	simra.LogDebug("[OUT]")
+func (t *touchListener) OnTouchBegin(x, y float32) {
+	t.touchBeginX = x
+	t.touchBeginY = y
+	t.touchCurrentX = x
+	t.touchCurrentY = y
+	t.touching = true
 }
 
-func (l *ctrlUpTouchListener) OnTouchMove(x, y float32) {
-	simra.LogDebug("[IN] ctrlUp Move!")
+func (t *touchListener) OnTouchMove(x, y float32) {
 
-	ctrl := l.parent
-	ctrl.buttonState = ctrlUp
+	if !t.touching {
+		// update values
+		t.touchBeginX = x
+		t.touchBeginY = y
+		t.touchCurrentX = x
+		t.touchCurrentY = y
+		t.touching = true
+	}
 
-	simra.LogDebug("[OUT]")
+	t.touchCurrentX = x
+	t.touchCurrentY = y
+
+	xMovement := t.touchBeginX - t.touchCurrentX
+	yMovement := t.touchBeginY - t.touchCurrentY
+
+	// check if touch is near edge of block
+	moveTolerance := float32(domain.BlockPixels)
+
+	if xMovement >= moveTolerance {
+		t.parent.Game.MoveLeft()
+		// reset touch
+		t.touching = false
+		return
+	}
+
+	if xMovement <= -moveTolerance {
+		t.parent.Game.MoveRight()
+		// reset touch
+		t.touching = false
+		return
+	}
+
+	if yMovement >= moveTolerance {
+		t.parent.Game.MoveDown()
+		// reset touch
+		t.touching = false
+		return
+	}
+
+	if yMovement <= -moveTolerance {
+		t.parent.Game.Rotate()
+		// reset touch
+		t.touching = false
+		return
+	}
 }
 
-func (l *ctrlUpTouchListener) OnTouchEnd(x, y float32) {
-	simra.LogDebug("[IN] ctrlUp End")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlNop
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *LevelScene) initctrlUp() {
-	// set size of ctrlUp
-	l.ctrlup.W = float32(120)
-	l.ctrlup.H = float32(120)
-
-	// put ctrlUp on middle bottom of screen
-	l.ctrlup.X = (config.ScreenWidth / 2)
-	l.ctrlup.Y = ctrlMarginBottom + l.ctrldown.H + ctrlMarginBetween + (l.ctrlup.H / 2)
-
-	// add sprite to glpeer
-	simra.GetInstance().AddSprite("arrow.png",
-		image.Rect(0, 0, int(l.ctrlup.W), int(l.ctrlup.H)),
-		&l.ctrlup)
-
-	// add touch listener for sprite
-	ctrlup := &ctrlUpTouchListener{}
-	l.ctrlup.AddTouchListener(ctrlup)
-	ctrlup.parent = l
-}
-
-// ctrlDown
-type ctrlDownTouchListener struct {
-	parent *LevelScene
-}
-
-func (l *ctrlDownTouchListener) OnTouchBegin(x, y float32) {
-	simra.LogDebug("[IN] ctrlDown Begin!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlDown
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlDownTouchListener) OnTouchMove(x, y float32) {
-	simra.LogDebug("[IN] ctrlDown Move!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlDown
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlDownTouchListener) OnTouchEnd(x, y float32) {
-	simra.LogDebug("[IN] ctrlDown End")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlNop
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *LevelScene) initctrlDown() {
-	// set size of ctrlDown
-	l.ctrldown.W = float32(120)
-	l.ctrldown.H = float32(120)
-
-	// put ctrlDown on middle bottom of screen
-	l.ctrldown.X = (config.ScreenWidth / 2)
-	l.ctrldown.Y = ctrlMarginBottom + (l.ctrldown.H / 2)
-
-	// rotate arrow to indicate down control
-	l.ctrldown.R = math.Pi
-
-	// add sprite to glpeer
-	simra.GetInstance().AddSprite("arrow.png",
-		image.Rect(0, 0, int(l.ctrldown.W), int(l.ctrldown.H)),
-		&l.ctrldown)
-
-	// add touch listener for sprite
-	ctrldown := &ctrlDownTouchListener{}
-	l.ctrldown.AddTouchListener(ctrldown)
-	ctrldown.parent = l
-}
-
-// ctrlLeft
-type ctrlLeftTouchListener struct {
-	parent *LevelScene
-}
-
-func (LevelScene *ctrlLeftTouchListener) OnTouchBegin(x, y float32) {
-	simra.LogDebug("[IN] ctrlLeft Begin!")
-
-	ctrl := LevelScene.parent
-	ctrl.buttonState = ctrlLeft
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlLeftTouchListener) OnTouchMove(x, y float32) {
-	simra.LogDebug("[IN] ctrlLeft Move!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlLeft
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlLeftTouchListener) OnTouchEnd(x, y float32) {
-	simra.LogDebug("[IN] ctrlLeft End")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlNop
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *LevelScene) initctrlLeft() {
-	// set size of ctrlLeft
-	l.ctrlleft.W = float32(120)
-	l.ctrlleft.H = float32(120)
-
-	// put ctrlLeft on left bottom
-	l.ctrlleft.X = (config.ScreenWidth / 2) - l.ctrlleft.W - ctrlMarginBetween
-	l.ctrlleft.Y = ctrlMarginBottom + l.ctrlleft.H
-
-	// rotate arrow to indicate left control
-	l.ctrlleft.R = math.Pi / 2
-
-	// add sprite to glpeer
-	simra.GetInstance().AddSprite("arrow.png",
-		image.Rect(0, 0, int(l.ctrlleft.W), int(l.ctrlleft.H)),
-		&l.ctrlleft)
-
-	// add touch listener for sprite
-	ctrlleft := &ctrlLeftTouchListener{}
-	l.ctrlleft.AddTouchListener(ctrlleft)
-	ctrlleft.parent = l
-}
-
-// ctrlRight
-type ctrlRightTouchListener struct {
-	parent *LevelScene
-}
-
-func (l *ctrlRightTouchListener) OnTouchBegin(x, y float32) {
-	simra.LogDebug("[IN] ctrlRight Begin!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlRight
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlRightTouchListener) OnTouchMove(x, y float32) {
-	simra.LogDebug("[IN] ctrlRight Move!")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlRight
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *ctrlRightTouchListener) OnTouchEnd(x, y float32) {
-	simra.LogDebug("[IN] ctrlRight End")
-
-	ctrl := l.parent
-	ctrl.buttonState = ctrlNop
-
-	simra.LogDebug("[OUT]")
-}
-
-func (l *LevelScene) initctrlRight() {
-	// set size of ctrlRight
-	l.ctrlright.W = float32(120)
-	l.ctrlright.H = float32(120)
-
-	// put ctrlRight on left bottom
-	l.ctrlright.X = (config.ScreenWidth / 2) + l.ctrlright.W + ctrlMarginBetween
-	l.ctrlright.Y = ctrlMarginBottom + l.ctrlright.H
-
-	// rotate arrow to indicate right control
-	l.ctrlright.R = -math.Pi / 2
-
-	// add sprite to glpeer
-	simra.GetInstance().AddSprite("arrow.png",
-		image.Rect(0, 0, int(l.ctrlright.W), int(l.ctrlright.H)),
-		&l.ctrlright)
-
-	// add touch listener for sprite
-	ctrlright := &ctrlRightTouchListener{}
-	l.ctrlright.AddTouchListener(ctrlright)
-	ctrlright.parent = l
+func (t *touchListener) OnTouchEnd(x, y float32) {
+	t.touching = false
+	t.touchEndX = x
+	t.touchEndY = y
 }
 
 // Drive is called from simra.
@@ -545,24 +384,13 @@ func (l *LevelScene) Drive() {
 
 	if l.Game.IsBoardDirty() {
 		// redraw board
+		fmt.Println("TEMP: redraw board\n")
 		l.removePlayerSprites()
 		l.redrawBackgroundImage()
 		l.Game.CleanBoard()
 	}
 	l.updatePlayerSprites()
 
-	switch l.buttonState {
-	case ctrlUp:
-		l.Game.Rotate()
-	case ctrlDown:
-		l.Game.MoveDown()
-	case ctrlLeft:
-		l.Game.MoveLeft()
-	case ctrlRight:
-		l.Game.MoveRight()
-	}
-	// stop button repeats
-	//l.buttonState = ctrlNop
 	if l.Game.GetState() == domain.GameOver {
 		simra.GetInstance().SetScene(&GameOverScene{Game: l.Game})
 	}
