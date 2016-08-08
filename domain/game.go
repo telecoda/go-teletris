@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -67,7 +66,6 @@ func (g *Game) StartGame() {
 }
 
 func (g *Game) SetBoardDirty() {
-	fmt.Println("TEMP: board is dirty\n")
 	g.dirty = true
 }
 
@@ -76,7 +74,6 @@ func (g *Game) IsBoardDirty() bool {
 }
 
 func (g *Game) CleanBoard() {
-	fmt.Println("TEMP: board is cleaned\n")
 	g.dirty = false
 }
 
@@ -118,7 +115,7 @@ func (g *Game) SaveHighScores() {
 	// TODO
 }
 
-func (g *Game) GetBlocks() *[][]Block {
+func (g *Game) GetBlocks() *[][]*Block {
 	return &g.board.cells
 }
 

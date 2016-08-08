@@ -1,28 +1,27 @@
 package domain
 
-import "fmt"
-
 type Block struct {
 	X, Y   int
 	Colour BlockColour
 }
 
 type Board struct {
-	cells [][]Block
+	cells [][]*Block
 }
 
 func NewBoard() Board {
 
 	b := Board{}
 	// fill with blank cells
-	b.cells = make([][]Block, BoardWidth)
+	b.cells = make([][]*Block, BoardWidth)
 
 	for x := 0; x < BoardWidth; x++ {
-		b.cells[x] = make([]Block, BoardHeight)
+		b.cells[x] = make([]*Block, BoardHeight)
 		for y := 0; y < BoardHeight; y++ {
-			b.cells[x][y] = Block{X: x, Y: y, Colour: Empty}
+			b.cells[x][y] = &Block{X: x, Y: y, Colour: Empty}
 		}
 	}
+
 	return b
 }
 
@@ -90,7 +89,7 @@ func (b *Board) addShapeToBoard(player *Player) {
 		blockY := player.Y + copiedBlock.Y
 		copiedBlock.X = blockX
 		copiedBlock.Y = blockY
-		b.cells[blockX][blockY] = copiedBlock
+		b.cells[blockX][blockY].Colour = copiedBlock.Colour
 	}
 }
 
@@ -136,48 +135,16 @@ func (b *Board) destroyRows(rows map[int]bool) {
 	   and the the board must be refilled
 	*/
 
-	fmt.Printf("TEMP: destroying rows: %#v\n", rows)
 	boardHeight := len(b.cells)
 	for y := 1; y < boardHeight-1; y++ {
 		if _, ok := rows[y]; ok {
 			//this is a row to destroy
 			//move all rows above it down 1 row
 			//self.move_row_down(y
-			fmt.Printf("TEMP: destroying line: %d\n", y)
 			b.moveRowDown(y)
 		}
 	}
 }
-
-// func (b *Board) moveRowDown(lastRow int) {
-
-// 	boardWidth := len(b.cells)
-// 	boardHeight := len(b.cells[0])
-// 	firstRow := boardHeight - 2
-
-// 	fmt.Printf("TEMP: moving rows down lastrow: %d firstrow: %d\n", lastRow, firstRow)
-
-// 	for y := lastRow; y < firstRow; y++ {
-// 		for x := 1; x < boardWidth-1; x++ {
-// 			// move cell from row above
-// 			b.cells[x][y] = b.cells[x][y+1]
-// 			// reset co-ords
-// 			b.cells[x][y].X = x
-// 			b.cells[x][y].Y = y
-// 		}
-
-// 		// new blank row at top
-// 		for x := 1; x < boardWidth-1; x++ {
-// 			b.cells[x][firstRow] = Block{X: x, Y: firstRow, Colour: Empty}
-// 		}
-
-// 	}
-// 	// first row
-// 	b.cells[1][firstRow].Colour = Red
-// 	// first row
-// 	b.cells[1][lastRow].Colour = Blue
-
-// }
 
 func (b *Board) moveRowDown(lastRow int) {
 	// we don't "really" move the row down, we just copy the colour of the blocks to the row below
@@ -186,16 +153,15 @@ func (b *Board) moveRowDown(lastRow int) {
 	boardHeight := len(b.cells[0])
 	firstRow := boardHeight - 2
 
-	fmt.Printf("TEMP: moving rows down lastrow: %d firstrow: %d\n", lastRow, firstRow)
+	// new blank row at bottom
+	for x := 1; x < boardWidth-1; x++ {
+		b.cells[x][lastRow].Colour = Empty
+	}
 
 	for y := lastRow; y < firstRow; y++ {
 		for x := 1; x < boardWidth-1; x++ {
 			// move cell from row above
-			fmt.Printf("TEMP: copying x: %d y: %d from x: %d y: %d colour: %#v\n", x, y, x, y+1, b.cells[x][y].Colour)
 			b.cells[x][y].Colour = b.cells[x][y+1].Colour
-			// // reset co-ords
-			// b.cells[x][y].X = x
-			// b.cells[x][y].Y = y
 		}
 
 	}
@@ -204,6 +170,4 @@ func (b *Board) moveRowDown(lastRow int) {
 		b.cells[x][firstRow].Colour = Empty
 	}
 
-	b.cells[1][1].Colour = Red
-	b.cells[1][20].Colour = Yellow
 }
