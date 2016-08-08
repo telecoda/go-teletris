@@ -24,14 +24,14 @@ func (p *Player) Init() {
 	p.nextShape = nil
 }
 
-func (p *Player) GetShapeBlocks() []Block {
+func (p *Player) GetShapeBlocks() []*Block {
 	if p.shape != nil {
 		return p.shape.GetBlocks()
 	}
 	return nil
 }
 
-func (p *Player) GetNextShapeBlocks() []Block {
+func (p *Player) GetNextShapeBlocks() []*Block {
 	if p.nextShape != nil {
 		return p.nextShape.GetBlocks()
 	}

@@ -146,8 +146,11 @@ func (l *LevelScene) initBackgroundImage() {
 
 func (l *LevelScene) redrawBackgroundImage() {
 
+	l.initBackgroundImage()
+	rect := image.Rect(0, 0, l.backgroundImage.Bounds().Dx(), l.backgroundImage.Bounds().Dy())
+	//clearImage := image.NewNRGBA(rect)
 	targetImage := l.drawBlocks(l.backgroundImage)
-	rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
+	//rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
 	tex := peer.GetGLPeer().LoadTextureFromImage(targetImage, rect)
 
 	// update background image
@@ -178,34 +181,10 @@ func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
 			blockImage := l.blockImages[block.Colour]
 			xCoord := (x * domain.BlockPixels) + domain.BoardOffsetX
 			yCoord := maxY - ((y + 2) * domain.BlockPixels) + domain.BoardOffsetY - domain.BlockPixels/2 - 4
+
 			rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
 			draw.Draw(targetImage, rect, blockImage, point, draw.Src)
 		}
-	}
-
-	return targetImage
-}
-
-func (l *LevelScene) drawPlayerBlocks(sourceImage image.Image) image.Image {
-
-	game := l.Game
-	player := game.Player
-	playerBlocks := player.GetShapeBlocks()
-
-	bounds := sourceImage.Bounds()
-	targetImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	draw.Draw(targetImage, bounds, sourceImage, bounds.Min, draw.Src)
-	point := image.Point{X: 0, Y: 0}
-
-	for _, playerBlock := range playerBlocks {
-		// This is a border block so render is on background image
-		blockImage := l.blockImages[playerBlock.Colour]
-
-		xCoord := (playerBlock.X * domain.BlockPixels) + domain.BoardOffsetX
-		yCoord := (playerBlock.X * domain.BlockPixels) + domain.BoardOffsetY
-		rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
-		draw.Draw(targetImage, rect, blockImage, point, draw.Src)
-
 	}
 
 	return targetImage
@@ -251,11 +230,11 @@ func (l *LevelScene) initPlayerSprites() {
 	player := game.Player
 	playerBlocks := player.GetShapeBlocks()
 	l.playerSprites = make([]*simra.Sprite, len(playerBlocks))
-	for i, playerBlock := range playerBlocks {
+	for i, _ := range playerBlocks {
 		playerSprite := new(simra.Sprite)
 
-		playerBlockX := playerBlock.X + player.X
-		playerBlockY := playerBlock.Y + player.Y
+		playerBlockX := playerBlocks[i].X + player.X
+		playerBlockY := playerBlocks[i].Y + player.Y
 		playerSprite.W = float32(domain.BlockPixels)
 		playerSprite.H = float32(domain.BlockPixels)
 
@@ -264,7 +243,7 @@ func (l *LevelScene) initPlayerSprites() {
 		playerSprite.Y = float32(domain.BlockPixels*playerBlockY + domain.BlockPixels/2 + domain.BoardOffsetY)
 
 		// lookup blockImage for sprite colour
-		blockImage := domain.SpriteNames[playerBlock.Colour]
+		blockImage := domain.SpriteNames[playerBlocks[i].Colour]
 		simra.GetInstance().AddSprite(blockImage,
 			image.Rect(0, 0, int(domain.BlockPixels), int(domain.BlockPixels)),
 			playerSprite)
@@ -275,6 +254,9 @@ func (l *LevelScene) initPlayerSprites() {
 }
 
 func (l *LevelScene) removePlayerSprites() {
+	for i, _ := range l.playerSprites {
+		simra.GetInstance().RemoveSprite(l.playerSprites[i])
+	}
 	l.playerSprites = nil
 }
 
@@ -289,11 +271,11 @@ func (l *LevelScene) updatePlayerSprites() {
 	player := game.Player
 	playerBlocks := player.GetShapeBlocks()
 
-	for i, playerBlock := range playerBlocks {
+	for i, _ := range playerBlocks {
 		playerSprite := l.playerSprites[i]
 
-		playerBlockX := playerBlock.X + player.X
-		playerBlockY := playerBlock.Y + player.Y
+		playerBlockX := playerBlocks[i].X + player.X
+		playerBlockY := playerBlocks[i].Y + player.Y
 		playerSprite.W = float32(domain.BlockPixels)
 		playerSprite.H = float32(domain.BlockPixels)
 
@@ -384,7 +366,6 @@ func (l *LevelScene) Drive() {
 
 	if l.Game.IsBoardDirty() {
 		// redraw board
-		fmt.Println("TEMP: redraw board\n")
 		l.removePlayerSprites()
 		l.redrawBackgroundImage()
 		l.Game.CleanBoard()

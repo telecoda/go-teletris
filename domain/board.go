@@ -1,28 +1,27 @@
 package domain
 
-import "fmt"
-
 type Block struct {
 	X, Y   int
 	Colour BlockColour
 }
 
 type Board struct {
-	cells [][]Block
+	cells [][]*Block
 }
 
 func NewBoard() Board {
 
 	b := Board{}
 	// fill with blank cells
-	b.cells = make([][]Block, BoardWidth)
+	b.cells = make([][]*Block, BoardWidth)
 
 	for x := 0; x < BoardWidth; x++ {
-		b.cells[x] = make([]Block, BoardHeight)
+		b.cells[x] = make([]*Block, BoardHeight)
 		for y := 0; y < BoardHeight; y++ {
-			b.cells[x][y] = Block{X: x, Y: y, Colour: Empty}
+			b.cells[x][y] = &Block{X: x, Y: y, Colour: Empty}
 		}
 	}
+
 	return b
 }
 
@@ -90,7 +89,7 @@ func (b *Board) addShapeToBoard(player *Player) {
 		blockY := player.Y + copiedBlock.Y
 		copiedBlock.X = blockX
 		copiedBlock.Y = blockY
-		b.cells[blockX][blockY] = copiedBlock
+		b.cells[blockX][blockY].Colour = copiedBlock.Colour
 	}
 }
 
@@ -135,36 +134,40 @@ func (b *Board) destroyRows(rows map[int]bool) {
 	   The rows must be removed and the remaining rows adjusted
 	   and the the board must be refilled
 	*/
+
 	boardHeight := len(b.cells)
 	for y := 1; y < boardHeight-1; y++ {
 		if _, ok := rows[y]; ok {
 			//this is a row to destroy
 			//move all rows above it down 1 row
 			//self.move_row_down(y
-			fmt.Println("TEMP: destroying line")
 			b.moveRowDown(y)
 		}
 	}
 }
 
 func (b *Board) moveRowDown(lastRow int) {
+	// we don't "really" move the row down, we just copy the colour of the blocks to the row below
 
 	boardWidth := len(b.cells)
 	boardHeight := len(b.cells[0])
 	firstRow := boardHeight - 2
 
+	// new blank row at bottom
+	for x := 1; x < boardWidth-1; x++ {
+		b.cells[x][lastRow].Colour = Empty
+	}
+
 	for y := lastRow; y < firstRow; y++ {
 		for x := 1; x < boardWidth-1; x++ {
 			// move cell from row above
-			b.cells[x][y] = b.cells[x][y+1]
-			// reset co-ords
-			b.cells[x][y].X = x
-			b.cells[x][y].Y = y
+			b.cells[x][y].Colour = b.cells[x][y+1].Colour
 		}
 
-		// new blank row at top
-		for x := 1; x < boardWidth-1; x++ {
-			b.cells[x][firstRow] = Block{X: x, Y: firstRow, Colour: Empty}
-		}
 	}
+	// new blank row at top
+	for x := 1; x < boardWidth-1; x++ {
+		b.cells[x][firstRow].Colour = Empty
+	}
+
 }
