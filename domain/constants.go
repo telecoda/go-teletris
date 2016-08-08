@@ -16,9 +16,10 @@ var InfoPanelWidth = (BoardWidth - 1) * BlockPixels
 
 // speed
 var (
-	BlockStartSpeed    = 500 // Speed blocks fall in milliseconds
-	KeyRepeat          = 150 // Key repeat in milliseconds
-	RowsPerLevel       = 5   // increase level every X rows
+	//TEMP: BlockStartSpeed    = 500 // Speed blocks fall in milliseconds
+	BlockStartSpeed    = 50000 // Speed blocks fall in milliseconds
+	KeyRepeat          = 150   // Key repeat in milliseconds
+	RowsPerLevel       = 5     // increase level every X rows
 	LevelSpeedIncrease = 50
 )
 

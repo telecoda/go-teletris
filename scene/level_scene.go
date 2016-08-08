@@ -146,8 +146,12 @@ func (l *LevelScene) initBackgroundImage() {
 
 func (l *LevelScene) redrawBackgroundImage() {
 
-	targetImage := l.drawBlocks(l.backgroundImage)
-	rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
+	//l.initBackgroundImage()
+	// clear background image
+	rect := image.Rect(0, 0, l.backgroundImage.Bounds().Dx(), l.backgroundImage.Bounds().Dy())
+	clearImage := image.NewNRGBA(rect)
+	targetImage := l.drawBlocks(clearImage)
+	//rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
 	tex := peer.GetGLPeer().LoadTextureFromImage(targetImage, rect)
 
 	// update background image
@@ -198,9 +202,7 @@ func (l *LevelScene) drawPlayerBlocks(sourceImage image.Image) image.Image {
 	point := image.Point{X: 0, Y: 0}
 
 	for _, playerBlock := range playerBlocks {
-		// This is a border block so render is on background image
 		blockImage := l.blockImages[playerBlock.Colour]
-
 		xCoord := (playerBlock.X * domain.BlockPixels) + domain.BoardOffsetX
 		yCoord := (playerBlock.X * domain.BlockPixels) + domain.BoardOffsetY
 		rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
@@ -385,6 +387,7 @@ func (l *LevelScene) Drive() {
 	if l.Game.IsBoardDirty() {
 		// redraw board
 		fmt.Println("TEMP: redraw board\n")
+		fmt.Printf("TEMP: board details: %#v\n", l.Game.GetBlocks())
 		l.removePlayerSprites()
 		l.redrawBackgroundImage()
 		l.Game.CleanBoard()
