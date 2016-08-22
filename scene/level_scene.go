@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"log"
 
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
@@ -15,41 +14,27 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
+type Label int
+
+const (
+	ScoreText Label = iota
+	LevelText
+)
+
 // LevelScene represents a scene object for LevelScene
 type LevelScene struct {
 	Game          *domain.Game
 	background    simra.Sprite
+	scoreLabel    simra.Sprite
+	levelLabel    simra.Sprite
 	blockImages   map[domain.BlockColour]*image.RGBA
 	blockTextures map[domain.BlockColour]*sprite.SubTex
+	digitTextures map[int]*sprite.SubTex
 	playerSprites []*simra.Sprite
-	ctrlup        simra.Sprite
-	ctrldown      simra.Sprite
-	ctrlleft      simra.Sprite
-	ctrlright     simra.Sprite
-	// buttonState represents which ctrl is pressed (or no ctrl pressed)
-	buttonState    int
-	buttonReplaced bool
 
 	// images
 	backgroundImage image.Image
 }
-
-// const (
-// 	ctrlNop = iota
-// 	ctrlUp
-// 	ctrlDown
-// 	ctrlLeft
-// 	ctrlRight
-// )
-
-// const (
-// 	ctrlMarginLeft      = 10
-// 	ctrlMarginBottom    = 100
-// 	ctrlMarginBetween   = 10
-// 	buttonMarginRight   = 20
-// 	buttonMarginBottom  = 20
-// 	buttonMarginBetween = 10
-// )
 
 // Initialize initializes LevelScene scene
 // This is called from simra.
@@ -60,25 +45,23 @@ func (l *LevelScene) Initialize() {
 
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
 
-	// add global touch listener to catch touch end event
-	//simra.GetInstance().AddTouchListener(l)
-
 	// TODO: when goes to next scene, remove global touch listener
 	// simra.GetInstance().RemoveTouchListener(LevelScene)
 
 	// initialize sprites
 	l.initSprites()
-	l.buttonReplaced = false
 	simra.LogDebug("[OUT]")
 }
 
 func (l *LevelScene) initSprites() {
-	l.initBackground()
+	l.initBackgroundSprite()
+	l.initLabelSprites()
+	l.initDigitTextures()
 	l.initBlockTextures()
 	l.initBackgroundImage()
 }
 
-func (l *LevelScene) initBackground() {
+func (l *LevelScene) initBackgroundSprite() {
 	// add background sprite
 	l.background.W = float32(config.ScreenWidth)
 	l.background.H = float32(config.ScreenHeight)
@@ -144,6 +127,39 @@ func (l *LevelScene) initBackgroundImage() {
 	}
 }
 
+// load textures for text labels
+func (l *LevelScene) initLabelSprites() {
+
+	simra.GetInstance().AddSprite("score.png",
+		image.Rect(0, 0, 147, 40),
+		&l.scoreLabel)
+
+	simra.GetInstance().AddSprite("level.png",
+		image.Rect(0, 0, 131, 40),
+		&l.levelLabel)
+
+}
+
+func (l *LevelScene) initDigitTextures() {
+
+	l.digitTextures = make(map[int]*sprite.SubTex, 10)
+
+	// digits image is a single image containing all the numbers
+	digitsImage, _, err := io.LoadImage("digits.png")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading image: %s\n", err))
+	} else {
+		// slice image into separate textures
+		for i := 0; i < 10; i++ {
+			x := i * domain.DigitsWidth
+			y := 0
+			rect := image.Rect(x, y, x+domain.DigitsWidth, y+domain.DigitsHeight)
+			tex := peer.GetGLPeer().LoadTextureFromImage(digitsImage, rect)
+			l.digitTextures[i] = &tex
+		}
+	}
+}
+
 func (l *LevelScene) redrawBackgroundImage() {
 
 	l.initBackgroundImage()
@@ -191,8 +207,6 @@ func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
 }
 
 func DrawGrid(sourceImage image.Image, tileWidth int, tileHeight int) image.Image {
-
-	log.Println("Drawing grid over image.")
 
 	lineWidth := 1
 	// convert sourceImage to RGBA image
@@ -322,33 +336,37 @@ func (t *touchListener) OnTouchMove(x, y float32) {
 	yMovement := t.touchBeginY - t.touchCurrentY
 
 	// check if touch is near edge of block
-	moveTolerance := float32(domain.BlockPixels)
+	moveTolerance := float32(domain.BlockPixels) - 5 // allow for some lag when moving blocks quickly
 
 	if xMovement >= moveTolerance {
 		t.parent.Game.MoveLeft()
-		// reset touch
-		t.touching = false
+		// reset begin values
+		t.touchBeginX = x
+		t.touchBeginY = y
 		return
 	}
 
 	if xMovement <= -moveTolerance {
 		t.parent.Game.MoveRight()
-		// reset touch
-		t.touching = false
+		// reset begin values
+		t.touchBeginX = x
+		t.touchBeginY = y
 		return
 	}
 
 	if yMovement >= moveTolerance {
 		t.parent.Game.MoveDown()
-		// reset touch
-		t.touching = false
+		// reset begin values
+		t.touchBeginX = x
+		t.touchBeginY = y
 		return
 	}
 
 	if yMovement <= -moveTolerance {
 		t.parent.Game.Rotate()
-		// reset touch
-		t.touching = false
+		// reset begin values
+		t.touchBeginX = x
+		t.touchBeginY = y
 		return
 	}
 }

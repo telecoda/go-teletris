@@ -9,6 +9,8 @@ var (
 	BoardOffsetX = 32
 	BoardOffsetY = 32
 	BlockPixels  = 40
+	DigitsWidth  = 30
+	DigitsHeight = 40
 )
 
 var ArrowPixels = 64
@@ -28,23 +30,27 @@ type BlockColour int
 const (
 	Empty = iota
 	Red
-	Green
+	Pink
 	Blue
-	Yellow
-	Magenta
-	Cyan
+	Purple
 	Grey
 )
 
 var SpriteNames map[BlockColour]string = map[BlockColour]string{
-	Empty:   "empty_block.png",
-	Red:     "red_block.png",
-	Green:   "green_block.png",
-	Blue:    "blue_block.png",
-	Yellow:  "yellow_block.png",
-	Magenta: "magenta_block.png",
-	Cyan:    "cyan_block.png",
-	Grey:    "grey_block.png",
+	Empty:  "empty_block.png",
+	Red:    "red_block_gopher.png",
+	Pink:   "pink_block_gopher.png",
+	Blue:   "blue_block_gopher.png",
+	Purple: "purple_block_gopher.png",
+	Grey:   "grey_block.png",
+	// Empty:   "empty_block.png",
+	// Red:     "red_block.png",
+	// Green:   "green_block.png",
+	// Blue:    "blue_block.png",
+	// Yellow:  "yellow_block.png",
+	// Magenta: "magenta_block.png",
+	// Cyan:    "cyan_block.png",
+	// Grey:    "grey_block.png",
 }
 
 type ShapeType int

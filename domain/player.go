@@ -62,7 +62,7 @@ func (p *Player) setNextRandomShape() {
 	// copy next shape
 	p.shape = p.nextShape
 	// random colour, not empty or grey
-	colour := BlockColour(rand.Intn(Cyan) + 1)
+	colour := BlockColour(rand.Intn(Purple) + 1)
 	shapeType := ShapeType(rand.Intn(RightStep))
 	switch shapeType {
 	case Square:
