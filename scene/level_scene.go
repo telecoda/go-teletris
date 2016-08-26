@@ -184,7 +184,7 @@ func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
 	bounds := sourceImage.Bounds()
 	maxY := bounds.Dy()
 	targetImage := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	draw.Draw(targetImage, bounds, sourceImage, bounds.Min, draw.Src)
+	draw.Draw(targetImage, bounds, sourceImage, bounds.Min, draw.Over)
 
 	for x := 0; x < boardWidth; x++ {
 		boardHeight := len(blocks[x])
@@ -199,7 +199,7 @@ func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
 			yCoord := maxY - ((y + 2) * domain.BlockPixels) + domain.BoardOffsetY - domain.BlockPixels/2 - 4
 
 			rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
-			draw.Draw(targetImage, rect, blockImage, point, draw.Src)
+			draw.Draw(targetImage, rect, blockImage, point, draw.Over)
 		}
 	}
 
