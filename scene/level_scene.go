@@ -26,7 +26,9 @@ type LevelScene struct {
 	Game          *domain.Game
 	background    simra.Sprite
 	scoreLabel    simra.Sprite
+	scoreDigits   [6]simra.Sprite
 	levelLabel    simra.Sprite
+	levelDigits   [2]simra.Sprite
 	blockImages   map[domain.BlockColour]*image.RGBA
 	blockTextures map[domain.BlockColour]*sprite.SubTex
 	digitTextures map[int]*sprite.SubTex
@@ -54,10 +56,10 @@ func (l *LevelScene) Initialize() {
 }
 
 func (l *LevelScene) initSprites() {
-	l.initBackgroundSprite()
-	l.initLabelSprites()
 	l.initDigitTextures()
 	l.initBlockTextures()
+	l.initBackgroundSprite()
+	l.initLabelSprites()
 	l.initBackgroundImage()
 }
 
@@ -130,13 +132,69 @@ func (l *LevelScene) initBackgroundImage() {
 // load textures for text labels
 func (l *LevelScene) initLabelSprites() {
 
+	l.scoreLabel.W = float32(100)
+	l.scoreLabel.H = float32(domain.BlockPixels)
+
+	// put top left screen
+	l.scoreLabel.X = float32(domain.BoardOffsetX + 50)
+	l.scoreLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
+
 	simra.GetInstance().AddSprite("score.png",
 		image.Rect(0, 0, 147, 40),
 		&l.scoreLabel)
 
+	lastDigitX := l.scoreLabel.X
+	lastDigitY := l.scoreLabel.Y
+
+	lastDigitX += float32(domain.BlockPixels)
+	// init score digits
+	for i := 0; i < len(l.scoreDigits); i++ {
+		l.scoreDigits[i].W = float32(domain.BlockPixels / 2)
+		l.scoreDigits[i].H = float32(domain.BlockPixels)
+
+		lastDigitX += float32(domain.BlockPixels / 2)
+		l.scoreDigits[i].X = lastDigitX
+		l.scoreDigits[i].Y = lastDigitY
+
+		simra.GetInstance().AddSprite("score.png",
+			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
+			&l.scoreDigits[i])
+		// replace texture straightaway
+		peer.GetSpriteContainer().ReplaceTexture(&l.scoreDigits[i].Sprite, *l.digitTextures[0])
+
+	}
+
+	l.levelLabel.W = float32(100)
+	l.levelLabel.H = float32(domain.BlockPixels)
+
+	// put top right screen
+	l.levelLabel.X = float32(config.ScreenWidth - 150)
+	l.levelLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
+
 	simra.GetInstance().AddSprite("level.png",
 		image.Rect(0, 0, 131, 40),
 		&l.levelLabel)
+
+	lastDigitX = l.levelLabel.X
+	lastDigitY = l.levelLabel.Y
+
+	lastDigitX += float32(domain.BlockPixels)
+	// init score digits
+	for i := 0; i < len(l.levelDigits); i++ {
+		l.levelDigits[i].W = float32(domain.BlockPixels / 2)
+		l.levelDigits[i].H = float32(domain.BlockPixels)
+
+		lastDigitX += float32(domain.BlockPixels / 2)
+		l.levelDigits[i].X = lastDigitX
+		l.levelDigits[i].Y = lastDigitY
+
+		simra.GetInstance().AddSprite("level.png",
+			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
+			&l.levelDigits[i])
+		// replace texture straightaway
+		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[0])
+
+	}
 
 }
 
@@ -158,6 +216,31 @@ func (l *LevelScene) initDigitTextures() {
 			l.digitTextures[i] = &tex
 		}
 	}
+}
+
+// func (l *LevelScene) updateDigitSprites() {
+
+// 	// Update score digits
+// 	score := l.Game.Player.Score
+
+// 	// Update level digits
+// }
+
+func numberToDigits(number int) []int {
+	numberDigits := make([]int, 0)
+
+	for number > 0 {
+		digit := number % 10
+		numberDigits = append(numberDigits, digit)
+
+		number = int(number / 10)
+	}
+
+	// reverse digits
+	for i, j := 0, len(numberDigits)-1; i < j; i, j = i+1, j-1 {
+		numberDigits[i], numberDigits[j] = numberDigits[j], numberDigits[i]
+	}
+	return numberDigits
 }
 
 func (l *LevelScene) redrawBackgroundImage() {

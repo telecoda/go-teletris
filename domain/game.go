@@ -99,7 +99,7 @@ func (g *Game) run() {
 		// drop blocks exery x milliseconds
 
 		// calc delay speed
-		delaySpeed := BlockStartSpeed - (g.Player.level - 1*LevelSpeedIncrease)
+		delaySpeed := BlockStartSpeed - (g.Player.Level - 1*LevelSpeedIncrease)
 
 		time.Sleep(time.Duration(delaySpeed) * time.Millisecond)
 		g.MoveDown()
