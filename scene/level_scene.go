@@ -26,9 +26,9 @@ type LevelScene struct {
 	Game          *domain.Game
 	background    simra.Sprite
 	scoreLabel    simra.Sprite
-	scoreDigits   [6]simra.Sprite
+	scoreDigits   [domain.MaxScoreDigits]simra.Sprite
 	levelLabel    simra.Sprite
-	levelDigits   [2]simra.Sprite
+	levelDigits   [domain.MaxLevelDigits]simra.Sprite
 	blockImages   map[domain.BlockColour]*image.RGBA
 	blockTextures map[domain.BlockColour]*sprite.SubTex
 	digitTextures map[int]*sprite.SubTex
@@ -226,6 +226,7 @@ func (l *LevelScene) initDigitTextures() {
 // 	// Update level digits
 // }
 
+// numberToDigits converts a number to an array of indexes for digit images
 func numberToDigits(number int) []int {
 	numberDigits := make([]int, 0)
 
@@ -240,6 +241,39 @@ func numberToDigits(number int) []int {
 	for i, j := 0, len(numberDigits)-1; i < j; i, j = i+1, j-1 {
 		numberDigits[i], numberDigits[j] = numberDigits[j], numberDigits[i]
 	}
+
+	return numberDigits
+}
+
+// scoreToDigits converts score to an array of digit image indexes
+func scoreToDigits(score int) []int {
+
+	numberDigits := numberToDigits(score)
+
+	if len(numberDigits) == domain.MaxScoreDigits {
+		return numberDigits
+	}
+
+	// if not right length, zero pad result
+	diff := domain.MaxScoreDigits - len(numberDigits)
+	zeroDigits := make([]int, diff)
+	numberDigits = append(zeroDigits, numberDigits...)
+	return numberDigits
+}
+
+// levelToDigits converts level to an array of digit image indexes
+func levelToDigits(level int) []int {
+
+	numberDigits := numberToDigits(level)
+
+	if len(numberDigits) == domain.MaxLevelDigits {
+		return numberDigits
+	}
+
+	// if not right length, zero pad result
+	diff := domain.MaxLevelDigits - len(numberDigits)
+	zeroDigits := make([]int, diff)
+	numberDigits = append(zeroDigits, numberDigits...)
 	return numberDigits
 }
 
@@ -357,6 +391,25 @@ func (l *LevelScene) removePlayerSprites() {
 	l.playerSprites = nil
 }
 
+func (l *LevelScene) updateLabelSprites() {
+	game := l.Game
+
+	// convert score
+	scoreDigits := scoreToDigits(game.Player.Score)
+
+	for i, value := range scoreDigits {
+		peer.GetSpriteContainer().ReplaceTexture(&l.scoreDigits[i].Sprite, *l.digitTextures[value])
+	}
+
+	// convert level
+	levelDigits := levelToDigits(game.Player.Level)
+
+	for i, value := range levelDigits {
+		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[value])
+	}
+
+}
+
 func (l *LevelScene) updatePlayerSprites() {
 	game := l.Game
 
@@ -471,6 +524,7 @@ func (l *LevelScene) Drive() {
 		l.redrawBackgroundImage()
 		l.Game.CleanBoard()
 	}
+	l.updateLabelSprites()
 	l.updatePlayerSprites()
 
 	if l.Game.GetState() == domain.GameOver {

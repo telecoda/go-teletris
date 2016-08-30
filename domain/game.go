@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -99,8 +100,7 @@ func (g *Game) run() {
 		// drop blocks exery x milliseconds
 
 		// calc delay speed
-		delaySpeed := BlockStartSpeed - (g.Player.Level - 1*LevelSpeedIncrease)
-
+		delaySpeed := BlockStartSpeed - ((g.Player.Level - 1) * LevelSpeedIncrease)
 		time.Sleep(time.Duration(delaySpeed) * time.Millisecond)
 		g.MoveDown()
 	}
@@ -151,10 +151,23 @@ func (g *Game) MoveDown() bool {
 	} else {
 		g.board.addShapeToBoard(&g.Player)
 		g.newShape()
-		g.board.checkCompleteRows()
+		fullRows := g.board.checkCompleteRows()
+		if fullRows > 0 {
+			// some rows completed, update score
+			g.Player.Score += ScorePerRow
+			g.Player.TotalRows += fullRows
+			// check for level change
+			beforeLevel := g.Player.Level
+			g.Player.Level = (g.Player.TotalRows / RowsPerLevel) + 1
+
+			if beforeLevel != g.Player.Level {
+				fmt.Printf("TEMP: Level up\n")
+			}
+		}
 		g.SetBoardDirty()
 		return false
 	}
+
 }
 
 func (g *Game) MoveLeft() bool {

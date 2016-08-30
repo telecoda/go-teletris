@@ -3,21 +3,28 @@ package domain
 var GameTitle = "Teletris"
 
 // Board constants
-var (
+const (
 	BoardWidth   = 12
 	BoardHeight  = 22
 	BoardOffsetX = 32
 	BoardOffsetY = 32
 	BlockPixels  = 40
-	DigitsWidth  = 30
-	DigitsHeight = 40
 )
 
 var ArrowPixels = 64
 var InfoPanelWidth = (BoardWidth - 1) * BlockPixels
 
+// score constants
+const (
+	DigitsWidth    = 30
+	DigitsHeight   = 40
+	MaxScoreDigits = 6
+	MaxLevelDigits = 2
+	ScorePerRow    = 5
+)
+
 // speed
-var (
+const (
 	BlockStartSpeed    = 500 // Speed blocks fall in milliseconds
 	KeyRepeat          = 150 // Key repeat in milliseconds
 	RowsPerLevel       = 5   // increase level every X rows

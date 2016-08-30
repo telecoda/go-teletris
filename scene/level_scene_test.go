@@ -1,8 +1,10 @@
 package scene
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
+
+	"github.com/telecoda/go-teletris/domain"
 )
 
 func TestNumberToDigits(t *testing.T) {
@@ -11,9 +13,13 @@ func TestNumberToDigits(t *testing.T) {
 
 	digits := numberToDigits(testNum)
 
-	if len(digits) != 3 {
-		t.Errorf("Error converting number to digits. Expected: %d got: %d", 3, len(digits))
+	if len(digits) != domain.MaxScoreDigits {
+		t.Errorf("ScoreDigits wrong length Expected: %d got: %d", domain.MaxScoreDigits, len(digits))
 	}
 
-	fmt.Printf("Result: %#v\n", digits)
+	expected := []int{0, 0, 0, 1, 2, 3}
+
+	if !reflect.DeepEqual(digits, expected) {
+		t.Errorf("ScoreDigits incorrect Expected: %d got: %d", expected, digits)
+	}
 }

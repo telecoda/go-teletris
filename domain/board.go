@@ -93,7 +93,7 @@ func (b *Board) addShapeToBoard(player *Player) {
 	}
 }
 
-func (b *Board) checkCompleteRows() {
+func (b *Board) checkCompleteRows() int {
 	/*
 		Check if there are any complete rows
 	*/
@@ -123,6 +123,8 @@ func (b *Board) checkCompleteRows() {
 	if len(fullRows) > 0 {
 		b.destroyRows(fullRows)
 	}
+
+	return len(fullRows)
 }
 
 func (b *Board) destroyRows(rows map[int]bool) {

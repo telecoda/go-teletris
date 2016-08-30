@@ -8,6 +8,7 @@ import (
 type Player struct {
 	Score     int
 	Level     int
+	TotalRows int
 	state     PlayerState
 	X, Y      int
 	shape     *Shape
@@ -17,6 +18,7 @@ type Player struct {
 func (p *Player) Init() {
 	p.Level = 1
 	p.Score = 0
+	p.TotalRows = 0
 	p.state = Alive
 	p.X = BoardWidth / 2
 	p.Y = BoardHeight - 3
