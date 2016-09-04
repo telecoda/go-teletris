@@ -30,7 +30,11 @@ This command will build and install an .apk file
 Make sure you connect you phone via USB and enable developer tools USB debugging
 
 
-## References
+## Acknowledgements
 
 Font: [Karmatic Arcade](http://www.1001freefonts.com/karmatic_arcade.font) by Vic Fieger
+
+Music: [Tetris dubstep - Mr Straightface](https://soundcloud.com/kaseythompson/tetris-dubstep-remix-free)
+
+Gophers: me ;)
 
