@@ -72,7 +72,7 @@ func (l *LevelScene) initBackgroundSprite() {
 	l.background.X = config.ScreenWidth / 2
 	l.background.Y = config.ScreenHeight / 2
 
-	simra.GetInstance().AddSprite("space_background.png",
+	simra.GetInstance().AddSprite("background.png",
 		image.Rect(0, 0, int(l.background.W), int(l.background.H)),
 		&l.background)
 
@@ -111,13 +111,13 @@ func (l *LevelScene) initBlockTextures() {
 func (l *LevelScene) initBackgroundImage() {
 
 	// load image from file
-	sourceImage, _, err := io.LoadImage("space_background.png")
+	sourceImage, _, err := io.LoadImage("background.png")
 	if err != nil {
 		panic(fmt.Sprintf("Error loading image: %s\n", err))
 	} else {
-		gridImage := DrawGrid(sourceImage, 20, 20)
+		//gridImage := DrawGrid(sourceImage, 20, 20)
 		// draw grey blocks on background
-		targetImage := l.drawBlocks(gridImage)
+		targetImage := l.drawBlocks(sourceImage)
 		rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
 		tex := peer.GetGLPeer().LoadTextureFromImage(targetImage, rect)
 
@@ -140,7 +140,7 @@ func (l *LevelScene) initLabelSprites() {
 	l.scoreLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
 
 	simra.GetInstance().AddSprite("score.png",
-		image.Rect(0, 0, 147, 40),
+		image.Rect(0, 0, 150, 40),
 		&l.scoreLabel)
 
 	lastDigitX := l.scoreLabel.X
@@ -172,7 +172,7 @@ func (l *LevelScene) initLabelSprites() {
 	l.levelLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
 
 	simra.GetInstance().AddSprite("level.png",
-		image.Rect(0, 0, 131, 40),
+		image.Rect(0, 0, 150, 40),
 		&l.levelLabel)
 
 	lastDigitX = l.levelLabel.X

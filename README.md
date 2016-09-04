@@ -2,7 +2,7 @@
 Go port of my python Teletris game
 
 ![alt text][Screenshot]
-[Screenshot]: https://raw.githubusercontent.com/telecoda/go-teletris/master/assets/screenshot.png "Screen shot"
+[Screenshot]: https://raw.githubusercontent.com/telecoda/go-teletris/master/orginal_arkwork/screenshot.png "Screen shot"
 
 ## Dependencies
 [go-mobile](https://github.com/golang/go/wiki/Mobile)
@@ -30,5 +30,7 @@ This command will build and install an .apk file
 Make sure you connect you phone via USB and enable developer tools USB debugging
 
 
-## Disclaimer
-Please note this is very inefficient unoptimised code, so only runs at about 6-7 frames per second.  Currently code is rendering 300+ sprites every frame.  Next step is to optimise this by rendering to an offscreen buffer first.
+## References
+
+Font: [Karmatic Arcade](http://www.1001freefonts.com/karmatic_arcade.font) by Vic Fieger
+

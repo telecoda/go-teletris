@@ -39,6 +39,8 @@ const (
 	Red
 	Pink
 	Blue
+	Yellow
+	Green
 	Purple
 	Grey
 )
@@ -48,16 +50,10 @@ var SpriteNames map[BlockColour]string = map[BlockColour]string{
 	Red:    "red_block_gopher.png",
 	Pink:   "pink_block_gopher.png",
 	Blue:   "blue_block_gopher.png",
+	Yellow: "yellow_block_gopher.png",
+	Green:  "green_block_gopher.png",
 	Purple: "purple_block_gopher.png",
 	Grey:   "grey_block.png",
-	// Empty:   "empty_block.png",
-	// Red:     "red_block.png",
-	// Green:   "green_block.png",
-	// Blue:    "blue_block.png",
-	// Yellow:  "yellow_block.png",
-	// Magenta: "magenta_block.png",
-	// Cyan:    "cyan_block.png",
-	// Grey:    "grey_block.png",
 }
 
 type ShapeType int
