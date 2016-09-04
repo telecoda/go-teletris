@@ -2,7 +2,7 @@
 Go port of my python Teletris game
 
 ![alt text][Screenshot]
-[Screenshot]: https://raw.githubusercontent.com/telecoda/go-teletris/master/orginal_arkwork/screenshot.png "Screen shot"
+[Screenshot]: https://raw.githubusercontent.com/telecoda/go-teletris/master/original_artwork/screenshot.png "Screen shot"
 
 ## Dependencies
 [go-mobile](https://github.com/golang/go/wiki/Mobile)
