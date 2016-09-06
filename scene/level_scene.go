@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"time"
 
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
@@ -444,6 +445,7 @@ type touchListener struct {
 	touchBeginX, touchBeginY     float32
 	touchCurrentX, touchCurrentY float32
 	touchEndX, touchEndY         float32
+	touchStart                   time.Time
 }
 
 func (t *touchListener) OnTouchBegin(x, y float32) {
@@ -452,6 +454,7 @@ func (t *touchListener) OnTouchBegin(x, y float32) {
 	t.touchCurrentX = x
 	t.touchCurrentY = y
 	t.touching = true
+	t.touchStart = time.Now()
 }
 
 func (t *touchListener) OnTouchMove(x, y float32) {
@@ -498,19 +501,17 @@ func (t *touchListener) OnTouchMove(x, y float32) {
 		return
 	}
 
-	if yMovement <= -moveTolerance {
-		t.parent.Game.Rotate()
-		// reset begin values
-		t.touchBeginX = x
-		t.touchBeginY = y
-		return
-	}
 }
 
 func (t *touchListener) OnTouchEnd(x, y float32) {
 	t.touching = false
 	t.touchEndX = x
 	t.touchEndY = y
+	duration := time.Now().Sub(t.touchStart)
+
+	if duration.Nanoseconds() < 500000000 {
+		t.parent.Game.Rotate()
+	}
 }
 
 // Drive is called from simra.
