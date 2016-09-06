@@ -65,7 +65,7 @@ func (p *Player) setNextRandomShape() {
 	p.shape = p.nextShape
 	// random colour, not empty or grey
 	colour := BlockColour(rand.Intn(Purple) + 1)
-	shapeType := ShapeType(rand.Intn(RightStep))
+	shapeType := ShapeType(rand.Intn(RightStep) + 1)
 	switch shapeType {
 	case Square:
 		p.nextShape = SquareShape(colour)
@@ -76,7 +76,7 @@ func (p *Player) setNextRandomShape() {
 	case RightL:
 		p.nextShape = RightLShape(colour)
 	case LeftStep:
-		p.nextShape = LeftLShape(colour)
+		p.nextShape = LeftStepShape(colour)
 	case RightStep:
 		p.nextShape = RightStepShape(colour)
 	default:

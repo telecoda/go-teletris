@@ -138,7 +138,7 @@ func (b *Board) destroyRows(rows map[int]bool) {
 	*/
 
 	boardHeight := len(b.cells)
-	for y := 1; y < boardHeight-1; y++ {
+	for y := boardHeight - 1; y >= 1; y-- {
 		if _, ok := rows[y]; ok {
 			//this is a row to destroy
 			//move all rows above it down 1 row
