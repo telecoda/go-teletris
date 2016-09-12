@@ -17,6 +17,7 @@ type HighScores struct {
 
 type Game struct {
 	state       GameState
+	prevState   GameState
 	board       Board
 	Player      Player
 	audioPlayer *audio.Player
@@ -78,12 +79,19 @@ func (g *Game) CleanBoard() {
 	g.dirty = false
 }
 
-func (g *Game) PauseGame() {
-	// TODO
+func (g *Game) SuspendGame() {
+	g.ChangeState(Suspended)
+	g.audioPlayer.Pause()
+
 }
 
 func (g *Game) ResumeGame() {
-	// TODO
+	// revert to previous state
+	g.ChangeState(g.prevState)
+	//g.SetBoardDirty()
+	g.audioPlayer.Play()
+
+	go g.run()
 }
 
 func (g *Game) GameOver() {
@@ -128,6 +136,15 @@ func (g *Game) newShape() {
 
 func (g *Game) GetState() GameState {
 	return g.state
+}
+
+func (g *Game) GetPreviousState() GameState {
+	return g.prevState
+}
+
+func (g *Game) ChangeState(newState GameState) {
+	g.prevState = g.state
+	g.state = newState
 }
 
 func (g *Game) Rotate() bool {

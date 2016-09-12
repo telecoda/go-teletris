@@ -72,7 +72,7 @@ type GameState int
 const (
 	Menu GameState = iota
 	Playing
-	Paused
+	Suspended
 	GameOver
 )
 

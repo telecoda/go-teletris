@@ -10,31 +10,73 @@ import (
 
 var game *domain.Game
 
+var titleScene simra.Driver
+var levelScene simra.Driver
+var gameoverScene simra.Driver
+var suspendScene simra.Driver
+
 func main() {
-	simra.LogDebug("[IN]")
 	engine := simra.GetInstance()
 
 	game = domain.NewGame()
+	initScenes()
 
 	onStart := make(chan bool)
 	onStop := make(chan bool)
 	go eventHandle(onStart, onStop)
 	engine.Start(onStart, onStop)
-	simra.LogDebug("[OUT]")
+}
+
+func initScenes() {
+	titleScene = &scene.TitleScene{Game: game}
+	levelScene = &scene.LevelScene{Game: game}
+	gameoverScene = &scene.GameOverScene{Game: game}
+	suspendScene = &scene.SuspendScene{}
 }
 
 func eventHandle(onStart, onStop chan bool) {
 	for {
 		select {
 		case <-onStart:
-			simra.LogDebug("receive chan. onStart")
+			initScenes()
 			engine := simra.GetInstance()
-			// TODO: this will be called on rotation.
-			// to keep state on rotation, SetScene must not call
-			// every onStart.
-			engine.SetScene(&scene.TitleScene{Game: game})
+
+			setScene(engine)
+			game.ResumeGame()
+
 		case <-onStop:
+			//initScenes()
 			simra.LogDebug("receive chan. onStop")
+			// stop the music!
+			game.SuspendGame()
 		}
+	}
+}
+
+func setScene(engine *simra.Simra) {
+	switch game.GetState() {
+	case domain.Menu:
+		engine.SetScene(titleScene)
+	case domain.Playing:
+		engine.SetScene(levelScene)
+	case domain.Suspended:
+		// use previous scene again
+		setPreviousScene(engine)
+	case domain.GameOver:
+		engine.SetScene(gameoverScene)
+	}
+}
+
+func setPreviousScene(engine *simra.Simra) {
+	switch game.GetPreviousState() {
+	case domain.Menu:
+		engine.SetScene(titleScene)
+	case domain.Playing:
+		engine.SetScene(levelScene)
+	case domain.Suspended:
+		// do nothing..
+		break
+	case domain.GameOver:
+		engine.SetScene(gameoverScene)
 	}
 }

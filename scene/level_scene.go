@@ -44,8 +44,6 @@ type LevelScene struct {
 // simra.GetInstance().SetDesiredScreenSize should be called to determine
 // screen size of this scene.
 func (l *LevelScene) Initialize() {
-	simra.LogDebug("[IN]")
-
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
 
 	// TODO: when goes to next scene, remove global touch listener
@@ -53,7 +51,6 @@ func (l *LevelScene) Initialize() {
 
 	// initialize sprites
 	l.initSprites()
-	simra.LogDebug("[OUT]")
 }
 
 func (l *LevelScene) initSprites() {
@@ -218,14 +215,6 @@ func (l *LevelScene) initDigitTextures() {
 		}
 	}
 }
-
-// func (l *LevelScene) updateDigitSprites() {
-
-// 	// Update score digits
-// 	score := l.Game.Player.Score
-
-// 	// Update level digits
-// }
 
 // numberToDigits converts a number to an array of indexes for digit images
 func numberToDigits(number int) []int {
@@ -518,6 +507,10 @@ func (t *touchListener) OnTouchEnd(x, y float32) {
 // This is used to update sprites position.
 // This will be called 60 times per sec.
 func (l *LevelScene) Drive() {
+
+	if l.Game.GetState() == domain.Suspended {
+		return
+	}
 
 	if l.Game.IsBoardDirty() {
 		// redraw board
