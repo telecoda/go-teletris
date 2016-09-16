@@ -24,16 +24,17 @@ const (
 
 // LevelScene represents a scene object for LevelScene
 type LevelScene struct {
-	Game          *domain.Game
-	background    simra.Sprite
-	scoreLabel    simra.Sprite
-	scoreDigits   [domain.MaxScoreDigits]simra.Sprite
-	levelLabel    simra.Sprite
-	levelDigits   [domain.MaxLevelDigits]simra.Sprite
-	blockImages   map[domain.BlockColour]*image.RGBA
-	blockTextures map[domain.BlockColour]*sprite.SubTex
-	digitTextures map[int]*sprite.SubTex
-	playerSprites []*simra.Sprite
+	Game             *domain.Game
+	background       simra.Sprite
+	scoreLabel       simra.Sprite
+	scoreDigits      [domain.MaxScoreDigits]simra.Sprite
+	levelLabel       simra.Sprite
+	levelDigits      [domain.MaxLevelDigits]simra.Sprite
+	blockImages      map[domain.BlockColour]*image.RGBA
+	blockTextures    map[domain.BlockColour]*sprite.SubTex
+	digitTextures    map[int]*sprite.SubTex
+	playerSprites    []*simra.Sprite
+	nextBlockSprites []*simra.Sprite
 
 	// images
 	backgroundImage image.Image
@@ -131,7 +132,7 @@ func (l *LevelScene) initLabelSprites() {
 	l.scoreLabel.H = float32(domain.BlockPixels)
 
 	// put top left screen
-	l.scoreLabel.X = float32(domain.BoardOffsetX + 50)
+	l.scoreLabel.X = float32(domain.BoardOffsetX + 20)
 	l.scoreLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
 
 	simra.GetInstance().AddSprite("score.png",
@@ -163,7 +164,7 @@ func (l *LevelScene) initLabelSprites() {
 	l.levelLabel.H = float32(domain.BlockPixels)
 
 	// put top right screen
-	l.levelLabel.X = float32(config.ScreenWidth - 150)
+	l.levelLabel.X = float32(config.ScreenWidth - 95)
 	l.levelLabel.Y = float32(config.ScreenHeight - domain.BlockPixels/2 - 4) // don't know why 4 but it looks right..
 
 	simra.GetInstance().AddSprite("level.png",
@@ -342,10 +343,13 @@ func DrawGrid(sourceImage image.Image, tileWidth int, tileHeight int) image.Imag
 
 func (l *LevelScene) initPlayerSprites() {
 
-	// playerBlocks are the only moving sprites
+	// playerBlocks & nextBlocks are moving sprites
 	game := l.Game
 	player := game.Player
 	playerBlocks := player.GetShapeBlocks()
+	nextBlocks := player.GetNextShapeBlocks()
+
+	// init current block sprites
 	l.playerSprites = make([]*simra.Sprite, len(playerBlocks))
 	for i, _ := range playerBlocks {
 		playerSprite := new(simra.Sprite)
@@ -368,11 +372,37 @@ func (l *LevelScene) initPlayerSprites() {
 		l.playerSprites[i] = playerSprite
 	}
 
+	centreX := config.ScreenWidth / 2
+
+	// init next block sprites
+	l.nextBlockSprites = make([]*simra.Sprite, len(nextBlocks))
+	for i, _ := range nextBlocks {
+		nextSprite := new(simra.Sprite)
+
+		nextSprite.W = float32(domain.NextBlockPixels)
+		nextSprite.H = float32(domain.NextBlockPixels)
+
+		nextSprite.X = float32(domain.NextBlockPixels*nextBlocks[i].X + centreX)
+		nextSprite.Y = float32(domain.NextBlockPixels*nextBlocks[i].Y + config.ScreenHeight - domain.NextOffsetY)
+
+		// lookup blockImage for sprite colour
+		nextImage := domain.SpriteNames[nextBlocks[i].Colour]
+		simra.GetInstance().AddSprite(nextImage,
+			image.Rect(0, 0, int(domain.BlockPixels), int(domain.BlockPixels)),
+			nextSprite)
+
+		l.nextBlockSprites[i] = nextSprite
+	}
+
 }
 
 func (l *LevelScene) removePlayerSprites() {
 	for i, _ := range l.playerSprites {
 		simra.GetInstance().RemoveSprite(l.playerSprites[i])
+	}
+	l.playerSprites = nil
+	for i, _ := range l.nextBlockSprites {
+		simra.GetInstance().RemoveSprite(l.nextBlockSprites[i])
 	}
 	l.playerSprites = nil
 }

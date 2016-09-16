@@ -4,11 +4,13 @@ var GameTitle = "Teletris"
 
 // Board constants
 const (
-	BoardWidth   = 12
-	BoardHeight  = 22
-	BoardOffsetX = 32
-	BoardOffsetY = 32
-	BlockPixels  = 40
+	BoardWidth      = 12
+	BoardHeight     = 22
+	BoardOffsetX    = 32
+	BoardOffsetY    = 32
+	BlockPixels     = 40
+	NextBlockPixels = 20
+	NextOffsetY     = 35
 )
 
 var ArrowPixels = 64
