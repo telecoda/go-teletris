@@ -40,13 +40,14 @@ func eventHandle(onStart, onStop chan bool) {
 		case <-onStart:
 			initScenes()
 			engine := simra.GetInstance()
-
 			setScene(engine)
 			game.ResumeGame()
-
 		case <-onStop:
-			//initScenes()
-			simra.LogDebug("receive chan. onStop")
+			// deallocate scenes
+			titleScene = nil
+			levelScene = nil
+			gameoverScene = nil
+			suspendScene = nil
 			// stop the music!
 			game.SuspendGame()
 		}

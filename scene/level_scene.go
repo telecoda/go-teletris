@@ -46,9 +46,6 @@ type LevelScene struct {
 func (l *LevelScene) Initialize() {
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
 
-	// TODO: when goes to next scene, remove global touch listener
-	// simra.GetInstance().RemoveTouchListener(LevelScene)
-
 	// initialize sprites
 	l.initSprites()
 }
@@ -154,7 +151,7 @@ func (l *LevelScene) initLabelSprites() {
 		l.scoreDigits[i].X = lastDigitX
 		l.scoreDigits[i].Y = lastDigitY
 
-		simra.GetInstance().AddSprite("score.png",
+		simra.GetInstance().AddSprite("digits.png",
 			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
 			&l.scoreDigits[i])
 		// replace texture straightaway
@@ -177,7 +174,7 @@ func (l *LevelScene) initLabelSprites() {
 	lastDigitY = l.levelLabel.Y
 
 	lastDigitX += float32(domain.BlockPixels)
-	// init score digits
+	// init level digits
 	for i := 0; i < len(l.levelDigits); i++ {
 		l.levelDigits[i].W = float32(domain.BlockPixels / 2)
 		l.levelDigits[i].H = float32(domain.BlockPixels)
@@ -185,8 +182,7 @@ func (l *LevelScene) initLabelSprites() {
 		lastDigitX += float32(domain.BlockPixels / 2)
 		l.levelDigits[i].X = lastDigitX
 		l.levelDigits[i].Y = lastDigitY
-
-		simra.GetInstance().AddSprite("level.png",
+		simra.GetInstance().AddSprite("digits.png",
 			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
 			&l.levelDigits[i])
 		// replace texture straightaway
