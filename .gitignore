@@ -1,3 +1,7 @@
 go-teletris*
 go_teletris*
 *.pprof
+debug
+build/
+.vscode/
+.DS_Store

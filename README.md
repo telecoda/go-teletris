@@ -29,6 +29,32 @@ This command will build and install an .apk file
 
 Make sure you connect you phone via USB and enable developer tools USB debugging
 
+## Building for the App Store
+These are more detailed instructions for building a .apk file that can be deployed to the app store and has a pretty icon to go with it. (iOS also supported but I've not tested it).
+
+### Build dependencies
+
+    go get github.com/nobonobo/gomobileapp
+    
+    pip install icons
+    
+### Building the .apk
+
+    gomobileapp build -icon icon.png -target android github.com/telecoda/go-teletris
+
+	adb install go-teletris.apk
+
+or
+
+    gomobileapp install -icon icon.png -target android github.com/telecoda/go-teletris
+
+
+The AndroidManifest.xml file is required to make the app full screen.  Gomobileapp then applies its own extra settings to the file during the build process.
+
+### Troubleshooting
+If you get any weird adb installation error, try installing the app from your phone first.  ADB has a habit of returning non-sensical error messages...
+
+Also when build the app with gomobileapp, make sure you have an internet connection.  This is because the code makes a call out to the internet to a time server for signing the jar.?? Apparently.
 
 ## Acknowledgements
 

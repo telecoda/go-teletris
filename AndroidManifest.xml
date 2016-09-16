@@ -1,0 +1,11 @@
+<manifest package="org.golang.todo.go_teletris">
+    <application xmlns:android="http://schemas.android.com/apk/res/android" android:label="Go-Teletris" android:debuggable="true">
+        <activity android:label="Go-Teletris" android:name="org.golang.app.GoNativeActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            <meta-data android:name="android.app.lib_name" android:value="go_teletris"></meta-data>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"></action>
+                <category android:name="android.intent.category.LAUNCHER"></category>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
