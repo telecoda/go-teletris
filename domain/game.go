@@ -32,8 +32,12 @@ type Teletris struct {
 
 func NewGame() *Game {
 	g := new(Game)
-	g.state = Menu
+	g.StartMenu()
 	return g
+}
+
+func (g *Game) StartMenu() {
+	g.state = Menu
 }
 
 func (g *Game) initAudio() {

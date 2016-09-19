@@ -30,6 +30,7 @@ type LevelScene struct {
 	scoreDigits      [domain.MaxScoreDigits]simra.Sprite
 	levelLabel       simra.Sprite
 	levelDigits      [domain.MaxLevelDigits]simra.Sprite
+	gameOverLabel    *simra.Sprite
 	blockImages      map[domain.BlockColour]*image.RGBA
 	blockTextures    map[domain.BlockColour]*sprite.SubTex
 	digitTextures    map[int]*sprite.SubTex
@@ -189,6 +190,38 @@ func (l *LevelScene) initLabelSprites() {
 		// replace texture straightaway
 		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[0])
 
+	}
+
+}
+
+// displayGameOverSprite is only called at the end of a game
+func (l *LevelScene) displayGameOverSprite() {
+
+	if l.gameOverLabel == nil {
+		l.gameOverLabel = &simra.Sprite{}
+
+		l.gameOverLabel.W = float32(322)
+		l.gameOverLabel.H = float32(197)
+
+		// put in screen centre
+		centreX := config.ScreenWidth / 2
+		centreY := config.ScreenHeight / 2
+		l.gameOverLabel.X = float32(centreX)
+		l.gameOverLabel.Y = float32(centreY)
+
+		simra.GetInstance().AddSprite("game_over.png",
+			image.Rect(0, 0, 322, 197),
+			l.gameOverLabel)
+
+		// // remove touch listener
+		// l.background.RemoveAllTouchListener()
+		// go func() {
+		// 	// add it back in but with a delay
+		// 	time.Sleep(2 * time.Second)
+		// 	touchListener := &touchListener{}
+		// 	touchListener.parent = l
+		// 	l.background.AddTouchListener(touchListener)
+		// }()
 	}
 
 }
@@ -519,6 +552,10 @@ func (t *touchListener) OnTouchMove(x, y float32) {
 }
 
 func (t *touchListener) OnTouchEnd(x, y float32) {
+	if t.parent.Game.GetState() == domain.GameOver {
+		t.parent.Game.StartMenu()
+	}
+
 	t.touching = false
 	t.touchEndX = x
 	t.touchEndY = y
@@ -548,6 +585,9 @@ func (l *LevelScene) Drive() {
 	l.updatePlayerSprites()
 
 	if l.Game.GetState() == domain.GameOver {
-		simra.GetInstance().SetScene(&GameOverScene{Game: l.Game})
+		l.displayGameOverSprite()
+	}
+	if l.Game.GetState() == domain.Menu {
+		simra.GetInstance().SetScene(&TitleScene{Game: l.Game})
 	}
 }

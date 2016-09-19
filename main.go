@@ -12,7 +12,6 @@ var game *domain.Game
 
 var titleScene simra.Driver
 var levelScene simra.Driver
-var gameoverScene simra.Driver
 var suspendScene simra.Driver
 
 func main() {
@@ -30,7 +29,6 @@ func main() {
 func initScenes() {
 	titleScene = &scene.TitleScene{Game: game}
 	levelScene = &scene.LevelScene{Game: game}
-	gameoverScene = &scene.GameOverScene{Game: game}
 	suspendScene = &scene.SuspendScene{}
 }
 
@@ -46,7 +44,6 @@ func eventHandle(onStart, onStop chan bool) {
 			// deallocate scenes
 			titleScene = nil
 			levelScene = nil
-			gameoverScene = nil
 			suspendScene = nil
 			// stop the music!
 			game.SuspendGame()
@@ -64,7 +61,7 @@ func setScene(engine *simra.Simra) {
 		// use previous scene again
 		setPreviousScene(engine)
 	case domain.GameOver:
-		engine.SetScene(gameoverScene)
+		engine.SetScene(levelScene)
 	}
 }
 
@@ -78,6 +75,6 @@ func setPreviousScene(engine *simra.Simra) {
 		// do nothing..
 		break
 	case domain.GameOver:
-		engine.SetScene(gameoverScene)
+		engine.SetScene(levelScene)
 	}
 }
