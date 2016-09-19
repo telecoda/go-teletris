@@ -2,6 +2,7 @@ package scene
 
 import (
 	"image"
+	"time"
 
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
@@ -27,7 +28,10 @@ func (g *GameOverScene) Initialize() {
 func (g *GameOverScene) initialize() {
 	// add background sprite
 	g.initBackground()
-	g.background.AddTouchListener(g)
+	go func() {
+		time.Sleep(2 * time.Second)
+		g.background.AddTouchListener(g)
+	}()
 }
 
 func (g *GameOverScene) initBackground() {
