@@ -1,6 +1,5 @@
 # TODO list
 
-- Mute button for audio
 - Brief tutorial
 - High score table
 - Zen mode

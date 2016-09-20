@@ -92,7 +92,6 @@ func (g *Game) SuspendGame() {
 func (g *Game) ResumeGame() {
 	// revert to previous state
 	g.ChangeState(g.prevState)
-	//g.SetBoardDirty()
 	g.audioPlayer.Play()
 
 	go g.run()
@@ -104,6 +103,24 @@ func (g *Game) GameOver() {
 	g.audioPlayer.Stop()
 
 	// TODO update high scores
+}
+
+func (g *Game) IsAudioPlaying() bool {
+	switch g.audioPlayer.State() {
+	case audio.Playing:
+		return true
+	default:
+		return false
+	}
+}
+
+func (g *Game) ToggleAudio() {
+
+	if g.IsAudioPlaying() {
+		g.audioPlayer.Stop()
+	} else {
+		g.audioPlayer.Play()
+	}
 }
 
 func (g *Game) run() {

@@ -30,6 +30,8 @@ type LevelScene struct {
 	scoreDigits      [domain.MaxScoreDigits]simra.Sprite
 	levelLabel       simra.Sprite
 	levelDigits      [domain.MaxLevelDigits]simra.Sprite
+	audioSprite      simra.Sprite
+	audioTextures    map[bool]*sprite.SubTex
 	gameOverLabel    *simra.Sprite
 	blockImages      map[domain.BlockColour]*image.RGBA
 	blockTextures    map[domain.BlockColour]*sprite.SubTex
@@ -55,6 +57,7 @@ func (l *LevelScene) Initialize() {
 func (l *LevelScene) initSprites() {
 	l.initDigitTextures()
 	l.initBlockTextures()
+	l.initAudioTextures()
 	l.initBackgroundSprite()
 	l.initLabelSprites()
 	l.initBackgroundImage()
@@ -103,6 +106,27 @@ func (l *LevelScene) initBlockTextures() {
 			l.blockImages[i] = blockRGBA
 		}
 	}
+}
+
+func (l *LevelScene) initAudioTextures() {
+
+	l.audioTextures = make(map[bool]*sprite.SubTex, 2)
+	rect := image.Rect(0, 0, 43, 43)
+
+	onImage, _, err := io.LoadImage("audio_on.png")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading image: %s\n", err))
+	}
+	offImage, _, err := io.LoadImage("audio_off.png")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading image: %s\n", err))
+	}
+	// Save texture for using with Sprites
+	onTex := peer.GetGLPeer().LoadTextureFromImage(onImage, rect)
+	l.audioTextures[true] = &onTex
+	offTex := peer.GetGLPeer().LoadTextureFromImage(offImage, rect)
+	l.audioTextures[false] = &offTex
+
 }
 
 func (l *LevelScene) initBackgroundImage() {
@@ -192,6 +216,23 @@ func (l *LevelScene) initLabelSprites() {
 
 	}
 
+	// audio button
+
+	l.audioSprite.W = float32(43)
+	l.audioSprite.H = float32(43)
+
+	// put bottom right screen
+	l.audioSprite.X = float32(config.ScreenWidth - 43)
+	l.audioSprite.Y = float32(43)
+
+	simra.GetInstance().AddSprite("audio_on.png",
+		image.Rect(0, 0, 43, 43),
+		&l.audioSprite)
+
+	// add listener
+	touchListener := &audioTouchListener{}
+	touchListener.parent = l
+	l.audioSprite.AddTouchListener(touchListener)
 }
 
 // displayGameOverSprite is only called at the end of a game
@@ -457,6 +498,9 @@ func (l *LevelScene) updateLabelSprites() {
 		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[value])
 	}
 
+	// update audio sprite (Based on audio state)
+	peer.GetSpriteContainer().ReplaceTexture(&l.audioSprite.Sprite, *l.audioTextures[game.IsAudioPlaying()])
+
 }
 
 func (l *LevelScene) updatePlayerSprites() {
@@ -564,6 +608,21 @@ func (t *touchListener) OnTouchEnd(x, y float32) {
 	if duration.Nanoseconds() < 500000000 {
 		t.parent.Game.Rotate()
 	}
+}
+
+// audioTouchListener
+type audioTouchListener struct {
+	parent *LevelScene
+}
+
+func (a *audioTouchListener) OnTouchBegin(x, y float32) {
+}
+
+func (a *audioTouchListener) OnTouchMove(x, y float32) {
+}
+
+func (a *audioTouchListener) OnTouchEnd(x, y float32) {
+	a.parent.Game.ToggleAudio()
 }
 
 // Drive is called from simra.
