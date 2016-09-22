@@ -111,7 +111,7 @@ func (l *LevelScene) initBlockTextures() {
 func (l *LevelScene) initAudioTextures() {
 
 	l.audioTextures = make(map[bool]*sprite.SubTex, 2)
-	rect := image.Rect(0, 0, 43, 43)
+	rect := image.Rect(0, 0, domain.AudioButtonWidth, domain.AudioButtonHeight)
 
 	onImage, _, err := io.LoadImage("audio_on.png")
 	if err != nil {
@@ -218,15 +218,15 @@ func (l *LevelScene) initLabelSprites() {
 
 	// audio button
 
-	l.audioSprite.W = float32(43)
-	l.audioSprite.H = float32(43)
+	l.audioSprite.W = float32(domain.AudioButtonWidth)
+	l.audioSprite.H = float32(domain.AudioButtonHeight)
 
 	// put bottom right screen
-	l.audioSprite.X = float32(config.ScreenWidth - 43)
-	l.audioSprite.Y = float32(43)
+	l.audioSprite.X = float32(config.ScreenWidth - domain.AudioButtonWidth)
+	l.audioSprite.Y = float32(domain.AudioButtonHeight)
 
 	simra.GetInstance().AddSprite("audio_on.png",
-		image.Rect(0, 0, 43, 43),
+		image.Rect(0, 0, domain.AudioButtonWidth, domain.AudioButtonHeight),
 		&l.audioSprite)
 
 	// add listener

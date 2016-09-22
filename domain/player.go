@@ -15,15 +15,19 @@ type Player struct {
 	nextShape *Shape
 }
 
-func (p *Player) Init() {
-	p.Level = 1
-	p.Score = 0
-	p.TotalRows = 0
-	p.state = Alive
-	p.X = BoardWidth / 2
-	p.Y = BoardHeight - 3
-	p.shape = nil
-	p.nextShape = nil
+func NewPlayer() *Player {
+	player := &Player{
+		Level:     1,
+		Score:     0,
+		TotalRows: 0,
+		state:     Alive,
+		X:         BoardWidth / 2,
+		Y:         BoardHeight - 3,
+		shape:     nil,
+		nextShape: nil,
+	}
+
+	return player
 }
 
 func (p *Player) GetShapeBlocks() []*Block {

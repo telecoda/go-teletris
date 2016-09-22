@@ -18,11 +18,13 @@ var InfoPanelWidth = (BoardWidth - 1) * BlockPixels
 
 // score constants
 const (
-	DigitsWidth    = 30
-	DigitsHeight   = 40
-	MaxScoreDigits = 6
-	MaxLevelDigits = 2
-	ScorePerRow    = 5
+	DigitsWidth       = 30
+	DigitsHeight      = 40
+	AudioButtonWidth  = 40
+	AudioButtonHeight = 40
+	MaxScoreDigits    = 6
+	MaxLevelDigits    = 2
+	ScorePerRow       = 5
 )
 
 // speed

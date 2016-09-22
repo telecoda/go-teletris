@@ -19,7 +19,7 @@ type Game struct {
 	state       GameState
 	prevState   GameState
 	board       Board
-	Player      Player
+	Player      *Player
 	audioPlayer *audio.Player
 	dirty       bool
 }
@@ -57,7 +57,7 @@ func (g *Game) StartGame() {
 	g.board = NewBoard()
 	g.initAudio()
 	// init player state
-	g.Player.Init()
+	g.Player = NewPlayer()
 	g.board.reset()
 	g.audioPlayer.Seek(0)
 	g.audioPlayer.SetVolume(1.0)
@@ -150,7 +150,7 @@ func (g *Game) GetBlocks() *[][]*Block {
 
 func (g *Game) newShape() {
 	g.Player.setNextRandomShape()
-	if !g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
+	if !g.board.canPlayerFitAt(g.Player, g.Player.X, g.Player.Y) {
 		g.GameOver()
 	}
 }
@@ -173,7 +173,7 @@ func (g *Game) Rotate() bool {
 	g.Player.Rotate()
 
 	// test if player's block fits
-	if !g.board.canPlayerFitAt(&g.Player, g.Player.X, g.Player.Y) {
+	if !g.board.canPlayerFitAt(g.Player, g.Player.X, g.Player.Y) {
 		// rotate it back
 		g.Player.RotateBack()
 		return false
@@ -183,11 +183,11 @@ func (g *Game) Rotate() bool {
 
 func (g *Game) MoveDown() bool {
 	// test if player's block fits
-	if g.board.canPlayerFitAt(&g.Player, g.Player.X, g.Player.Y-1) {
+	if g.board.canPlayerFitAt(g.Player, g.Player.X, g.Player.Y-1) {
 		g.Player.MoveDown()
 		return true
 	} else {
-		g.board.addShapeToBoard(&g.Player)
+		g.board.addShapeToBoard(g.Player)
 		g.newShape()
 		fullRows := g.board.checkCompleteRows()
 		if fullRows > 0 {
@@ -210,7 +210,7 @@ func (g *Game) MoveDown() bool {
 
 func (g *Game) MoveLeft() bool {
 	// test if player's block fits
-	if g.board.canPlayerFitAt(&g.Player, g.Player.X-1, g.Player.Y) {
+	if g.board.canPlayerFitAt(g.Player, g.Player.X-1, g.Player.Y) {
 		g.Player.MoveLeft()
 		return true
 	}
@@ -219,7 +219,7 @@ func (g *Game) MoveLeft() bool {
 
 func (g *Game) MoveRight() bool {
 	// test if player's block fits
-	if g.board.canPlayerFitAt(&g.Player, g.Player.X+1, g.Player.Y) {
+	if g.board.canPlayerFitAt(g.Player, g.Player.X+1, g.Player.Y) {
 		g.Player.MoveRight()
 		return true
 	}

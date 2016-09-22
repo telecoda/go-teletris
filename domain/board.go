@@ -56,10 +56,10 @@ func (b *Board) canPlayerFitAt(player *Player, x, y int) bool {
 		return false
 	}
 
-	if x < 1 || x > BoardWidth-1 {
+	if x < 0 || x > BoardWidth-1 {
 		return false // out of bounds
 	}
-	if y < 1 || x > BoardHeight-1 {
+	if y < 0 || y > BoardHeight-1 {
 		return false // out of bounds
 	}
 
