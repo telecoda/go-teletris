@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +19,7 @@ type Game struct {
 	prevState   GameState
 	board       Board
 	Player      *Player
+	audioOn     bool
 	audioPlayer *audio.Player
 	dirty       bool
 }
@@ -32,6 +32,7 @@ type Teletris struct {
 
 func NewGame() *Game {
 	g := new(Game)
+	g.audioOn = true
 	g.StartMenu()
 	return g
 }
@@ -61,7 +62,12 @@ func (g *Game) StartGame() {
 	g.board.reset()
 	g.audioPlayer.Seek(0)
 	g.audioPlayer.SetVolume(1.0)
-	g.audioPlayer.Play()
+
+	if g.audioOn {
+		g.audioPlayer.Play()
+	} else {
+		g.audioPlayer.Pause()
+	}
 
 	g.state = Playing
 	g.Player.setNextRandomShape()
@@ -92,13 +98,14 @@ func (g *Game) SuspendGame() {
 func (g *Game) ResumeGame() {
 	// revert to previous state
 	g.ChangeState(g.prevState)
-	g.audioPlayer.Play()
+	if g.audioOn {
+		g.audioPlayer.Play()
+	}
 
 	go g.run()
 }
 
 func (g *Game) GameOver() {
-	log.Println("Game Over!")
 	g.state = GameOver
 	g.audioPlayer.Stop()
 
@@ -117,10 +124,13 @@ func (g *Game) IsAudioPlaying() bool {
 func (g *Game) ToggleAudio() {
 
 	if g.IsAudioPlaying() {
+		g.audioOn = false
 		g.audioPlayer.Stop()
 	} else {
+		g.audioOn = true
 		g.audioPlayer.Play()
 	}
+
 }
 
 func (g *Game) run() {
@@ -199,7 +209,7 @@ func (g *Game) MoveDown() bool {
 			g.Player.Level = (g.Player.TotalRows / RowsPerLevel) + 1
 
 			if beforeLevel != g.Player.Level {
-				fmt.Printf("TEMP: Level up\n")
+				// TODO - do something
 			}
 		}
 		g.SetBoardDirty()

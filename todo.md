@@ -19,5 +19,3 @@
 - Send to app store
 
 ## Bugs
-
-Mute audio resets at the beginning of each game
