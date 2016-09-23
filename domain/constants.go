@@ -69,6 +69,7 @@ const (
 	RightL
 	LeftStep
 	RightStep
+	T
 )
 
 type GameState int

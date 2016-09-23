@@ -69,7 +69,7 @@ func (p *Player) setNextRandomShape() {
 	p.shape = p.nextShape
 	// random colour, not empty or grey
 	colour := BlockColour(rand.Intn(Purple) + 1)
-	shapeType := ShapeType(rand.Intn(RightStep) + 1)
+	shapeType := ShapeType(rand.Intn(T) + 1)
 	switch shapeType {
 	case Square:
 		p.nextShape = SquareShape(colour)
@@ -83,6 +83,8 @@ func (p *Player) setNextRandomShape() {
 		p.nextShape = LeftStepShape(colour)
 	case RightStep:
 		p.nextShape = RightStepShape(colour)
+	case T:
+		p.nextShape = TShape(colour)
 	default:
 		err := fmt.Sprintf("Unexpected shape type: %d", shapeType)
 		panic(err)
