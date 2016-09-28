@@ -1,7 +1,10 @@
 package scene
 
 import (
+	"fmt"
 	"image"
+	"runtime"
+	"sync"
 
 	"github.com/telecoda/go-teletris/domain"
 	"github.com/telecoda/go-teletris/scene/config"
@@ -10,25 +13,48 @@ import (
 
 // TitleScene represents a scene object for TitleScene
 type TitleScene struct {
+	sync.Mutex
 	Game       *domain.Game
-	background simra.Sprite
+	background *simra.Sprite
 }
 
 // Initialize initializes TitleScene scene
 func (t *TitleScene) Initialize() {
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
+	fmt.Printf("TEMP: before title init\n")
+	ReportMemoryUsage()
 	// initialize sprites
 	t.initialize()
+	fmt.Printf("TEMP: after title init\n")
+	ReportMemoryUsage()
 }
 
 func (t *TitleScene) initialize() {
 	// add background sprite
+	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
 	t.initBackground()
 	t.background.AddTouchListener(t)
 }
 
+func (t *TitleScene) Destroy() {
+	fmt.Printf("TEMP: before title destroy\n")
+	ReportMemoryUsage()
+	go t.destroy()
+}
+
+func (t *TitleScene) destroy() {
+	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
+	t.background = nil
+	runtime.GC()
+	fmt.Printf("TEMP: after title destroy\n")
+	ReportMemoryUsage()
+}
+
 func (t *TitleScene) initBackground() {
 	// add background sprite
+	t.background = &simra.Sprite{}
 	t.background.W = float32(config.ScreenWidth)
 	t.background.H = float32(config.ScreenHeight)
 
@@ -38,7 +64,7 @@ func (t *TitleScene) initBackground() {
 
 	simra.GetInstance().AddSprite("title.png",
 		image.Rect(0, 0, int(t.background.W), int(t.background.H)),
-		&t.background)
+		t.background)
 }
 
 func (t *TitleScene) Drive() {

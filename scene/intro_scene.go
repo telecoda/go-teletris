@@ -3,6 +3,8 @@ package scene
 import (
 	"fmt"
 	"image"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/telecoda/go-teletris/domain"
@@ -12,8 +14,9 @@ import (
 
 // IntroScene represents a scene object for IntroScene
 type IntroScene struct {
+	sync.Mutex
 	Game         *domain.Game
-	introSprites [5]simra.Sprite
+	introSprites []*simra.Sprite
 	currentPage  int
 }
 
@@ -26,16 +29,34 @@ func (i *IntroScene) Initialize() {
 }
 
 func (i *IntroScene) initialize() {
-	// add background sprite
-	i.initBackground()
+	i.initSprites()
 	i.introSprites[4].AddTouchListener(i)
 }
 
-func (i *IntroScene) initBackground() {
+func (i *IntroScene) Destroy() {
+	go i.destroy()
+}
+
+func (i *IntroScene) destroy() {
+
+	i.Mutex.Lock()
+	defer i.Mutex.Unlock()
+
+	for n, _ := range i.introSprites {
+		i.introSprites[n].RemoveAllTouchListener()
+		i.introSprites[n] = nil
+	}
+	runtime.GC()
+}
+
+func (i *IntroScene) initSprites() {
 	// add sprites
+
+	i.introSprites = make([]*simra.Sprite, 5)
 
 	i.currentPage = len(i.introSprites) - 1
 	for n := i.currentPage; n >= 0; n-- {
+		i.introSprites[n] = &simra.Sprite{}
 
 		i.introSprites[n].W = float32(config.ScreenWidth)
 		i.introSprites[n].H = float32(config.ScreenHeight)
@@ -46,7 +67,7 @@ func (i *IntroScene) initBackground() {
 
 		simra.GetInstance().AddSprite(fmt.Sprintf("intro-%d.png", n),
 			image.Rect(0, 0, int(i.introSprites[n].W), int(i.introSprites[n].H)),
-			&i.introSprites[n])
+			i.introSprites[n])
 	}
 
 	i.currentPage = 0
@@ -54,8 +75,13 @@ func (i *IntroScene) initBackground() {
 }
 
 func (i *IntroScene) hideSprite(idx int) {
+
+	// place a lock on introScene until hide has completed
+	i.Mutex.Lock()
+	defer i.Mutex.Unlock()
 	// slide sprite down off screen
 	for n := 0; n < config.ScreenHeight; n++ {
+
 		switch idx {
 		case 0: // left
 			i.introSprites[idx].X--

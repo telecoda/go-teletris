@@ -27,9 +27,11 @@ func main() {
 }
 
 func initScenes() {
-	titleScene = &scene.TitleScene{Game: game}
-	levelScene = &scene.LevelScene{Game: game}
-	suspendScene = &scene.SuspendScene{}
+	if titleScene == nil {
+		titleScene = &scene.TitleScene{Game: game}
+		levelScene = &scene.LevelScene{Game: game}
+		suspendScene = &scene.SuspendScene{}
+	}
 }
 
 func eventHandle(onStart, onStop chan bool) {
@@ -42,9 +44,9 @@ func eventHandle(onStart, onStop chan bool) {
 			game.ResumeGame()
 		case <-onStop:
 			// deallocate scenes
-			titleScene = nil
-			levelScene = nil
-			suspendScene = nil
+			//titleScene = nil
+			//levelScene = nil
+			//suspendScene = nil
 			// stop the music!
 			game.SuspendGame()
 		}
@@ -52,6 +54,7 @@ func eventHandle(onStart, onStop chan bool) {
 }
 
 func setScene(engine *simra.Simra) {
+	scene.ReportMemoryUsage()
 	switch game.GetState() {
 	case domain.Menu:
 		engine.SetScene(titleScene)

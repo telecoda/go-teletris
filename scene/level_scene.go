@@ -5,6 +5,8 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/telecoda/go-teletris/domain"
@@ -24,13 +26,14 @@ const (
 
 // LevelScene represents a scene object for LevelScene
 type LevelScene struct {
+	sync.Mutex
 	Game             *domain.Game
-	background       simra.Sprite
-	scoreLabel       simra.Sprite
-	scoreDigits      [domain.MaxScoreDigits]simra.Sprite
-	levelLabel       simra.Sprite
-	levelDigits      [domain.MaxLevelDigits]simra.Sprite
-	audioSprite      simra.Sprite
+	background       *simra.Sprite
+	scoreLabel       *simra.Sprite
+	scoreDigits      []*simra.Sprite
+	levelLabel       *simra.Sprite
+	levelDigits      []*simra.Sprite
+	audioSprite      *simra.Sprite
 	audioTextures    map[bool]*sprite.SubTex
 	gameOverLabel    *simra.Sprite
 	blockImages      map[domain.BlockColour]*image.RGBA
@@ -49,9 +52,52 @@ type LevelScene struct {
 // screen size of this scene.
 func (l *LevelScene) Initialize() {
 	simra.GetInstance().SetDesiredScreenSize(config.ScreenWidth, config.ScreenHeight)
-
+	l.Mutex.Lock()
+	defer l.Mutex.Unlock()
 	// initialize sprites
 	l.initSprites()
+}
+
+func (l *LevelScene) Destroy() {
+	go l.destroy()
+}
+
+func (l *LevelScene) destroy() {
+
+	l.Mutex.Lock()
+	defer l.Mutex.Unlock()
+
+	// deallocate all sprites
+	l.background = nil
+	l.scoreLabel = nil
+	l.levelLabel = nil
+	l.audioSprite = nil
+	l.gameOverLabel = nil
+
+	for n, _ := range l.levelDigits {
+		l.levelDigits[n] = nil
+	}
+	for n, _ := range l.scoreDigits {
+		l.scoreDigits[n] = nil
+	}
+	for key, _ := range l.audioTextures {
+		l.audioTextures[key] = nil
+	}
+	for key, _ := range l.blockImages {
+		l.blockImages[key] = nil
+	}
+	for n, _ := range l.blockTextures {
+		l.blockTextures[n] = nil
+	}
+	for n, _ := range l.playerSprites {
+		l.playerSprites[n] = nil
+	}
+	for n, _ := range l.nextBlockSprites {
+		l.nextBlockSprites[n] = nil
+	}
+
+	runtime.GC()
+
 }
 
 func (l *LevelScene) initSprites() {
@@ -65,6 +111,7 @@ func (l *LevelScene) initSprites() {
 
 func (l *LevelScene) initBackgroundSprite() {
 	// add background sprite
+	l.background = &simra.Sprite{}
 	l.background.W = float32(config.ScreenWidth)
 	l.background.H = float32(config.ScreenHeight)
 
@@ -74,7 +121,7 @@ func (l *LevelScene) initBackgroundSprite() {
 
 	simra.GetInstance().AddSprite("background.png",
 		image.Rect(0, 0, int(l.background.W), int(l.background.H)),
-		&l.background)
+		l.background)
 
 	// add left touch listener for background
 	touchListener := &touchListener{}
@@ -143,7 +190,9 @@ func (l *LevelScene) initBackgroundImage() {
 		tex := peer.GetGLPeer().LoadTextureFromImage(targetImage, rect)
 
 		// update background image
-		peer.GetSpriteContainer().ReplaceTexture(&l.background.Sprite, tex)
+		if l.background != nil {
+			peer.GetSpriteContainer().ReplaceTexture(&l.background.Sprite, tex)
+		}
 
 		// save image for reuse
 		l.backgroundImage = targetImage
@@ -152,6 +201,8 @@ func (l *LevelScene) initBackgroundImage() {
 
 // load textures for text labels
 func (l *LevelScene) initLabelSprites() {
+
+	l.scoreLabel = &simra.Sprite{}
 
 	l.scoreLabel.W = float32(100)
 	l.scoreLabel.H = float32(domain.BlockPixels)
@@ -162,14 +213,16 @@ func (l *LevelScene) initLabelSprites() {
 
 	simra.GetInstance().AddSprite("score.png",
 		image.Rect(0, 0, 150, 40),
-		&l.scoreLabel)
+		l.scoreLabel)
 
 	lastDigitX := l.scoreLabel.X
 	lastDigitY := l.scoreLabel.Y
 
 	lastDigitX += float32(domain.BlockPixels)
 	// init score digits
+	l.scoreDigits = make([]*simra.Sprite, domain.MaxScoreDigits)
 	for i := 0; i < len(l.scoreDigits); i++ {
+		l.scoreDigits[i] = &simra.Sprite{}
 		l.scoreDigits[i].W = float32(domain.BlockPixels / 2)
 		l.scoreDigits[i].H = float32(domain.BlockPixels)
 
@@ -179,11 +232,13 @@ func (l *LevelScene) initLabelSprites() {
 
 		simra.GetInstance().AddSprite("digits.png",
 			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
-			&l.scoreDigits[i])
+			l.scoreDigits[i])
 		// replace texture straightaway
 		peer.GetSpriteContainer().ReplaceTexture(&l.scoreDigits[i].Sprite, *l.digitTextures[0])
 
 	}
+
+	l.levelLabel = &simra.Sprite{}
 
 	l.levelLabel.W = float32(100)
 	l.levelLabel.H = float32(domain.BlockPixels)
@@ -194,14 +249,16 @@ func (l *LevelScene) initLabelSprites() {
 
 	simra.GetInstance().AddSprite("level.png",
 		image.Rect(0, 0, 150, 40),
-		&l.levelLabel)
+		l.levelLabel)
 
 	lastDigitX = l.levelLabel.X
 	lastDigitY = l.levelLabel.Y
 
 	lastDigitX += float32(domain.BlockPixels)
 	// init level digits
+	l.levelDigits = make([]*simra.Sprite, domain.MaxLevelDigits)
 	for i := 0; i < len(l.levelDigits); i++ {
+		l.levelDigits[i] = &simra.Sprite{}
 		l.levelDigits[i].W = float32(domain.BlockPixels / 2)
 		l.levelDigits[i].H = float32(domain.BlockPixels)
 
@@ -210,7 +267,7 @@ func (l *LevelScene) initLabelSprites() {
 		l.levelDigits[i].Y = lastDigitY
 		simra.GetInstance().AddSprite("digits.png",
 			image.Rect(0, 0, domain.BlockPixels, domain.BlockPixels),
-			&l.levelDigits[i])
+			l.levelDigits[i])
 		// replace texture straightaway
 		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[0])
 
@@ -218,6 +275,7 @@ func (l *LevelScene) initLabelSprites() {
 
 	// audio button
 
+	l.audioSprite = &simra.Sprite{}
 	l.audioSprite.W = float32(domain.AudioButtonWidth)
 	l.audioSprite.H = float32(domain.AudioButtonHeight)
 
@@ -227,7 +285,7 @@ func (l *LevelScene) initLabelSprites() {
 
 	simra.GetInstance().AddSprite("audio_on.png",
 		image.Rect(0, 0, domain.AudioButtonWidth, domain.AudioButtonHeight),
-		&l.audioSprite)
+		l.audioSprite)
 
 	// add listener
 	touchListener := &audioTouchListener{}
@@ -253,16 +311,6 @@ func (l *LevelScene) displayGameOverSprite() {
 		simra.GetInstance().AddSprite("game_over.png",
 			image.Rect(0, 0, 322, 197),
 			l.gameOverLabel)
-
-		// // remove touch listener
-		// l.background.RemoveAllTouchListener()
-		// go func() {
-		// 	// add it back in but with a delay
-		// 	time.Sleep(2 * time.Second)
-		// 	touchListener := &touchListener{}
-		// 	touchListener.parent = l
-		// 	l.background.AddTouchListener(touchListener)
-		// }()
 	}
 
 }
@@ -342,14 +390,13 @@ func (l *LevelScene) redrawBackgroundImage() {
 
 	l.initBackgroundImage()
 	rect := image.Rect(0, 0, l.backgroundImage.Bounds().Dx(), l.backgroundImage.Bounds().Dy())
-	//clearImage := image.NewNRGBA(rect)
 	targetImage := l.drawBlocks(l.backgroundImage)
-	//rect := image.Rect(0, 0, targetImage.Bounds().Dx(), targetImage.Bounds().Dy())
 	tex := peer.GetGLPeer().LoadTextureFromImage(targetImage, rect)
 
 	// update background image
-	peer.GetSpriteContainer().ReplaceTexture(&l.background.Sprite, tex)
-
+	if l.background != nil {
+		peer.GetSpriteContainer().ReplaceTexture(&l.background.Sprite, tex)
+	}
 }
 
 func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
@@ -377,6 +424,9 @@ func (l *LevelScene) drawBlocks(sourceImage image.Image) image.Image {
 			yCoord := maxY - ((y + 2) * domain.BlockPixels) + domain.BoardOffsetY - domain.BlockPixels/2 - 4
 
 			rect := image.Rect(xCoord, yCoord, xCoord+domain.BlockPixels, yCoord+domain.BlockPixels)
+			if blockImage == nil {
+				continue
+			}
 			draw.Draw(targetImage, rect, blockImage, point, draw.Over)
 		}
 	}
@@ -472,10 +522,16 @@ func (l *LevelScene) initPlayerSprites() {
 
 func (l *LevelScene) removePlayerSprites() {
 	for i, _ := range l.playerSprites {
+		if l.playerSprites[i] == nil {
+			continue
+		}
 		simra.GetInstance().RemoveSprite(l.playerSprites[i])
 	}
 	l.playerSprites = nil
 	for i, _ := range l.nextBlockSprites {
+		if l.nextBlockSprites[i] == nil {
+			continue
+		}
 		simra.GetInstance().RemoveSprite(l.nextBlockSprites[i])
 	}
 	l.playerSprites = nil
@@ -488,6 +544,9 @@ func (l *LevelScene) updateLabelSprites() {
 	scoreDigits := scoreToDigits(game.Player.Score)
 
 	for i, value := range scoreDigits {
+		if l.scoreDigits[i] == nil {
+			continue
+		}
 		peer.GetSpriteContainer().ReplaceTexture(&l.scoreDigits[i].Sprite, *l.digitTextures[value])
 	}
 
@@ -495,11 +554,16 @@ func (l *LevelScene) updateLabelSprites() {
 	levelDigits := levelToDigits(game.Player.Level)
 
 	for i, value := range levelDigits {
+		if l.levelDigits[i] == nil {
+			continue
+		}
 		peer.GetSpriteContainer().ReplaceTexture(&l.levelDigits[i].Sprite, *l.digitTextures[value])
 	}
 
 	// update audio sprite (Based on audio state)
-	peer.GetSpriteContainer().ReplaceTexture(&l.audioSprite.Sprite, *l.audioTextures[game.IsAudioPlaying()])
+	if l.audioSprite != nil {
+		peer.GetSpriteContainer().ReplaceTexture(&l.audioSprite.Sprite, *l.audioTextures[game.IsAudioPlaying()])
+	}
 
 }
 
@@ -516,6 +580,10 @@ func (l *LevelScene) updatePlayerSprites() {
 
 	for i, _ := range playerBlocks {
 		playerSprite := l.playerSprites[i]
+
+		if playerSprite == nil {
+			continue
+		}
 
 		playerBlockX := playerBlocks[i].X + player.X
 		playerBlockY := playerBlocks[i].Y + player.Y

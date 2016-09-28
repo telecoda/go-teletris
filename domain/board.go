@@ -1,7 +1,5 @@
 package domain
 
-import "fmt"
-
 type Block struct {
 	X, Y   int
 	Colour BlockColour
@@ -59,7 +57,6 @@ func (b *Board) canPlayerFitAt(player *Player, x, y int) bool {
 	}
 
 	if x < 0 || x > BoardWidth-1 {
-		fmt.Printf("TEMP: out of bounds: x: %d\n", x)
 		return false // out of bounds
 	}
 	if y < 0 || y > BoardHeight-1 {
