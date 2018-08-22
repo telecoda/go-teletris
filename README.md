@@ -1,7 +1,7 @@
 # go-teletris
 Go port of my python [Teletris](https://github.com/telecoda/teletris) game
 
-[Screenshot](original_artwork/screenshot.png?raw=true)
+![img](original_artwork/screenshot.png?raw=true)
 
 ## Dependencies
 [go-mobile](https://github.com/golang/go/wiki/Mobile)
